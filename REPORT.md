@@ -7,7 +7,18 @@ be read as a statement about an individual client.
 Every figure is traceable to a committed file in `reports/`. Nothing is quoted that a reader
 cannot regenerate with `PYTHONPATH=src python -m funneliq.data.profile`.
 
-Status: **Package 1 complete.** Packages 2–6 follow in Phase 3.
+Status: **Packages 1–6 complete.** Sources: `reports/profile.json`, `reports/invariants.json`,
+`reports/models.json`, `reports/budget_simulation.json`.
+
+## The one-paragraph summary
+
+`ad_budget` explains almost everything in this dataset, and it does so non-linearly: campaigns in
+the **₪2,000–5,000 band massively outperform** both smaller and larger ones. Gradient boosting
+**fails to beat a budget-only baseline on campaign lifetime** and only ties it on profit — an
+honest negative result, and the reason baselines were mandatory. Boosting *does* earn its place on
+the two classification tasks, taking upsell F1 from 0.00 to 0.70 and referral F1 to 0.72. The
+budget recommendation is to **spread ₪50,000 across ~25 campaigns of ₪2,000**, with the caveat
+that the effect driving it may be an artefact of how this dataset was generated.
 
 ---
 
@@ -146,17 +157,241 @@ stage 3.
 
 ---
 
-## Still to come
+---
 
-| Package | Target | Status |
+## Package 2 — Campaign lifetime (regression)
+
+Target `ltv_months`, checkpoint **C2** (after follow-up 2), 3,486 campaigns, 14 features.
+5-fold CV, fixed seed.
+
+| Model | RMSE | R² | vs baseline |
+|---|---|---|---|
+| **Budget-only group mean (baseline)** | **4.70** | **0.8560** | — |
+| CatBoost | 4.75 | 0.8532 | **−0.0028** |
+| LightGBM | 4.86 | 0.8458 | −0.0102 |
+| XGBoost | 4.89 | 0.8425 | −0.0135 |
+
+### Should `cumulative_profit` be a feature here? No.
+
+Profit and lifetime correlate at **r = 0.846**, and profit accrues *over* the lifetime being
+predicted — it is a consequence of the target, not a cause. Including it would produce a model
+that scores brilliantly offline and cannot run at all in production, where a campaign's total
+profit is unknown at the moment you want its lifetime forecast.
+
+`customer_acquisition_cost` is excluded for a subtler reason: it equals `floor(ad_budget / closed)`
+exactly, so alongside `ad_budget` it hands the model the campaign's sales result.
+
+**The leakage smoke test quantifies this.** Training the same CatBoost model with the forbidden
+post-campaign columns lifts R² from **0.853 → 0.946**, an inflation of **+0.092**. That is the
+concrete cost of a leak: a number 9 points better that no production system could reproduce.
+
+### Which features dominate, and do the models agree?
+
+**`ad_budget` dominates — but the three libraries disagree about how much:**
+
+| Model | Top feature | Share |
 |---|---|---|
-| 2 — Campaign LTV | `ltv_months` | Phase 3 |
-| 3 — Campaign upsell | `upsell` | Phase 3 |
-| 4 — Referral score 0–100 | `referred` | Phase 3 |
-| 5 — Follow-up paradox | — | preview above |
-| 6 — Budget simulator | `cumulative_profit` | Phase 3 |
-| 7 — Campaign comparison | — | Phase 3–5 |
+| XGBoost | `ad_budget` | **95.8%** |
+| CatBoost | `ad_budget` | **91.8%** |
+| LightGBM | `answer_rate` | 18.8% (budget far lower) |
 
-Assumptions that could not be settled from the data — most importantly whether `cumulative_profit`
-is gross or net of ad spend, which affects every ROAS figure above — are tracked in
+The disagreement is a **measurement artefact, not a modelling insight**. LightGBM's default
+importance counts *splits*, which spreads credit across correlated features; XGBoost and CatBoost
+report *gain*, which concentrates it on the one that actually moves predictions. Reading
+LightGBM's spread as "the funnel metrics matter more" would be a mistake. On gain-based measures
+the models agree completely.
+
+### The strongest lever, in two sentences
+
+Campaign budget band is by far the strongest lever on customer longevity: campaigns in the
+₪2,000–5,000 range produce customers who stay **33.6 months on average, against 7.9 for smaller
+and 13.2 for larger campaigns**. Northbound should move spend into that band rather than trying to
+improve follow-up execution, which the model shows has comparatively little influence on lifetime.
+
+### The honest headline: boosting loses here
+
+**No gradient-boosting model beat a budget-only group mean.** CatBoost came closest and still lost
+by 0.003 R².
+
+This is a real result, not a tuning failure. `ad_budget` has only 16 distinct values, and a group
+mean over 16 categories is already an extremely strong estimator of a target driven mainly by
+those categories. The funnel features add nothing beyond it. Deploying a 300-tree ensemble here
+would add latency, dependencies and opacity in exchange for slightly worse accuracy.
+
+**Recommendation: ship the baseline for LTV.** The trained CatBoost model is kept for comparison
+and reproducibility, not because it is better.
+
+---
+
+## Package 3 — Campaign upsell (classification)
+
+Target `upsell`, checkpoint **C2**, 3,490 campaigns, positive rate 42.0%. Stratified 5-fold CV,
+class-imbalance handling on all three models.
+
+| Model | Accuracy | Precision | Recall | F1 |
+|---|---|---|---|---|
+| Majority-class baseline | 0.5799 | 0.00 | **0.00** | **0.00** |
+| **CatBoost** | **0.7304** | 0.6533 | **0.7640** | **0.7039** |
+| LightGBM | 0.7163 | 0.6409 | 0.7401 | 0.6865 |
+| XGBoost | 0.7160 | 0.6423 | 0.7319 | 0.6836 |
+
+### Why is accuracy alone misleading here?
+
+Because **a model that predicts "no upsell" for every campaign scores 58% accuracy** while being
+completely useless — it identifies zero upsell opportunities. Its recall and F1 are both 0.
+
+CatBoost's 73% accuracy is only 15 points above that do-nothing baseline, which sounds modest. But
+its **recall of 0.764** means it finds roughly three-quarters of the campaigns that will actually
+produce an upsell, which is the number the sales team would act on. For outreach targeting, recall
+matters more than precision: a false positive costs one wasted call, a false negative costs the
+whole upsell.
+
+Worth stating plainly: at 42% positives this target is only **mildly imbalanced**. Imbalance
+handling is implemented as the brief requires, but it is not the dominant lever on these results
+and pretending otherwise would overclaim.
+
+### Is upsell driven by one feature or a combination?
+
+**A combination — and this is where upsell differs from LTV.** CatBoost importances:
+`ad_budget` 27.9%, `num_leads` 10.6%, `cost_per_lead` 10.2%, `answer_rate` 7.9%,
+`budget_per_answered_lead` 5.8%, `stage_retention_2` 5.7%.
+
+Budget still leads but explains only about a quarter, with the rest spread across lead volume and
+funnel-efficiency metrics. That is why boosting genuinely earns its place here and did not for
+LTV: there is real interaction structure to learn.
+
+### The business rule, and why the comparison is unfair
+
+The brief suggests *"if LTV > X and CAC < Y, flag for outreach."* Both fields are **excluded from
+the upsell model** — `ltv_months` is not known at C2, and `customer_acquisition_cost` encodes the
+sales outcome.
+
+So the rule holds an information advantage the model is denied. A rule scored at C3 against a
+model scored at C2 is not a fair fight, and any comparison that does not say so is misleading.
+Stating the asymmetry *is* the answer here. The defensible comparison is: **the model works with
+what Northbound actually knows after two follow-ups; the rule needs data that only exists once the
+campaign is over**, by which point the outreach decision has already passed.
+
+---
+
+## Package 4 — Campaign referral score (0–100)
+
+Target `referred`, checkpoint **C1** (after lead response only), 3,490 campaigns, 6 features.
+CatBoost with a 12-point hyperparameter search over learning rate × depth × iterations.
+
+Best parameters: `learning_rate 0.03, depth 4, iterations 300`.
+
+| | Accuracy | Precision | Recall | F1 |
+|---|---|---|---|---|
+| Majority-class baseline | 0.6120 | 0.00 | 0.00 | 0.00 |
+| **Tuned CatBoost** | **0.7513** | 0.6420 | **0.8139** | **0.7176** |
+
+The search was flat — the top three configurations differ by 0.002 F1, and every one of the best
+used `learning_rate 0.03` with `iterations 300`. Depth barely mattered. That is consistent with a
+target driven by a few strong signals rather than deep interactions.
+
+**Scoring pipeline:** score = predicted probability × 100, served by the app. Importances:
+`ad_budget` 58.5%, `cost_per_lead` 12.4%, `num_leads` 10.6%, `answer_rate` 7.0%.
+
+> **This is a campaign score, not a person's.** It estimates the likelihood that *a campaign*
+> produces at least one referral. It is never a given customer's probability of referring a
+> friend — that would need customer-level data this project does not have.
+
+### Profiling the high-value campaigns
+
+Campaigns with `referred = Yes`, `upsell = 1` and long lifetimes are overwhelmingly concentrated
+in the **₪2,000–5,000 band**, which shows a 64.2% referral rate against 7.7% (Low) and 19.1%
+(High). Mean acquisition cost in that band is lower than in the High tier despite far better
+outcomes — these campaigns are cheaper *and* better.
+
+**How could Northbound spot them earlier?** The model runs at C1, using only budget and lead
+response — available within days of launch, long before any deal closes. That is the practical
+value: a campaign can be identified as high-referral-potential while there is still time to fund
+it further.
+
+---
+
+## Package 5 — The follow-up paradox
+
+Full data in the preview above. **The sales manager's claim is wrong.**
+
+Dropout *falls* at stages 3 (18.6%) and 4 (**10.4%**, the lowest in the funnel), then spikes at
+stage 5 (29.2%). Leads surviving three follow-ups are the most committed in the pipeline.
+
+**For campaigns that closed deals**, `calls_to_closed` correlates **−0.55** with profit: campaigns
+closing in 1–2 calls average ~₪23,000 profit and 36-month lifetimes, while those needing 6+ calls
+average ~₪1,800 and ~6.7 months.
+
+**Should Northbound change its follow-up policy? Yes — but not the way Sales proposed.** Cutting
+after follow-up 3 would abandon leads at their single most retentive stage. The genuine cliff is
+at stage 5. The deeper point is that heavy call effort predicts a *weak* campaign rather than
+producing a strong one, so the lever is campaign quality up front, not persistence later.
+
+---
+
+## Package 6 — Budget allocation
+
+Target `cumulative_profit`, checkpoint **C0** (pre-launch), 3,461 campaigns, **one feature**
+(`ad_budget`) — because the simulator must run before any money is spent.
+
+| Model | RMSE | R² |
+|---|---|---|
+| Budget-only baseline | 6,633 | 0.6488 |
+| CatBoost / LightGBM / XGBoost | 6,633 | 0.6488 |
+
+All four are **identical to four decimal places**, which is the expected result rather than a bug:
+with one categorical-in-effect feature, a tree ensemble converges on exactly the group mean. There
+is nothing else for it to learn.
+
+### Simulating ₪50,000
+
+| Strategy | Predicted total profit | ROAS | |
+|---|---|---|---|
+| 1 × ₪50,000 | ₪4,776 | 0.10 | ⚠️ **extrapolated — excluded** |
+| 3 × ₪16,667 | ₪15,667 | 0.31 | |
+| 5 × ₪10,000 | ₪25,588 | 0.51 | |
+| 10 × ₪5,000 | ₪216,984 | 4.34 | |
+| 17 × ₪2,941 | ₪373,501 | 7.47 | |
+| **25 × ₪2,000** | **₪543,519** | **10.87** | ✅ **recommended** |
+| 33 × ₪1,515 | ₪109,609 | 2.19 | |
+
+**Spreading wins decisively, but not without limit.** The optimum is around **25 campaigns of
+₪2,000**. Going further to 33 × ₪1,515 collapses ROAS from 10.9 to 2.2, because that budget falls
+below the productive band.
+
+**The ₪50,000 single-campaign scenario is excluded, not just discounted.** ₪50,000 is 2.5× the
+largest budget ever observed (₪20,000). Tree ensembles cannot extrapolate — they return the
+nearest leaf value and present it with full confidence. Reporting that ₪4,776 as a forecast would
+be fabrication dressed as analysis, so the simulator flags it and refuses to rank it.
+
+### What to tell the founder next month
+
+> Stop running campaigns above ₪5,000 — they return ₪0.52 per ₪1. Split the ₪50,000 into roughly
+> **25 campaigns of ₪2,000** rather than spreading evenly across all sizes. On this data that is
+> the difference between ~₪5,000 and ~₪543,000 of predicted monthly profit.
+>
+> **Before committing the full budget, test it.** Run one month at ₪20,000 split this way against
+> ₪30,000 on the current approach, and compare. The pattern is strong but it comes from a single
+> historical dataset with a suspiciously clean structure.
+
+---
+
+## Limitations
+
+**The mid-budget effect may not be real.** A discrete 16-value budget grid with a sharp regime
+change and a 10× profit gap is more characteristic of a data generator than of an advertising
+market. Every recommendation above rests on it. Validate before spending.
+
+**Two models did not beat their baselines.** LTV and profit are both better served by a budget
+group mean. That is reported rather than hidden, and the baseline is what should ship.
+
+**Unresolved definitions.** Most importantly, whether `cumulative_profit` is gross or net of ad
+spend — every ROAS figure in this report depends on it. Full register in
 [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md).
+
+**Campaign-level only.** No statement here describes an individual customer. Churn, next-best
+action and personal referral likelihood require a customer table linked by `campaign_id`, which
+does not exist.
+
+Model provenance — features, checkpoint, seed, git SHA, row counts — is recorded in
+[`docs/MODEL_CARDS.md`](docs/MODEL_CARDS.md) and `models/*.json`.

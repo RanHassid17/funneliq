@@ -1,0 +1,42 @@
+{
+  "name": "ltv_months",
+  "target": "ltv_months",
+  "checkpoint": "C2",
+  "features": [
+    "ad_budget",
+    "num_leads",
+    "leads_answered",
+    "answer_rate",
+    "cost_per_lead",
+    "budget_per_answered_lead",
+    "followup_1",
+    "followup_2",
+    "stage_retention_1",
+    "stage_retention_2",
+    "stage_to_stage_retention_1",
+    "stage_to_stage_retention_2",
+    "stage_dropout_1",
+    "stage_dropout_2"
+  ],
+  "rows_trained": 3486,
+  "algorithm": "catboost",
+  "metrics": {
+    "rmse": 4.753766806703894,
+    "r2": 0.8532171196794179
+  },
+  "baseline_name": "baseline_budget_group_mean",
+  "baseline_metrics": {
+    "rmse": 4.707196572813866,
+    "r2": 0.8559666674657201
+  },
+  "improvement": {
+    "r2": -0.00275,
+    "rmse": 0.04657
+  },
+  "notes": [
+    "Package 2 - campaign lifetime. Campaign-level target, never an individual customer's.",
+    "Rows missing this target are dropped, never imputed."
+  ],
+  "seed": 42,
+  "git_sha": "81666e6d098fb454845fc177ef2f5d6293b78767"
+}

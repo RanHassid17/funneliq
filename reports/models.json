@@ -1,0 +1,942 @@
+{
+  "seed": 42,
+  "rows": 3490,
+  "package_2_ltv": {
+    "package": "Package 2 - campaign lifetime",
+    "target": "ltv_months",
+    "checkpoint": "C2",
+    "features": [
+      "ad_budget",
+      "num_leads",
+      "leads_answered",
+      "answer_rate",
+      "cost_per_lead",
+      "budget_per_answered_lead",
+      "followup_1",
+      "followup_2",
+      "stage_retention_1",
+      "stage_retention_2",
+      "stage_to_stage_retention_1",
+      "stage_to_stage_retention_2",
+      "stage_dropout_1",
+      "stage_dropout_2"
+    ],
+    "rows": 3486,
+    "baseline": {
+      "name": "baseline_budget_group_mean",
+      "metrics": {
+        "rmse": 4.707197,
+        "r2": 0.855967
+      },
+      "std": {
+        "rmse": 0.173625,
+        "r2": 0.012762
+      },
+      "folds": [
+        {
+          "rmse": 4.968983,
+          "r2": 0.838356
+        },
+        {
+          "rmse": 4.555293,
+          "r2": 0.865065
+        },
+        {
+          "rmse": 4.478965,
+          "r2": 0.874676
+        },
+        {
+          "rmse": 4.770163,
+          "r2": 0.853987
+        },
+        {
+          "rmse": 4.762579,
+          "r2": 0.847748
+        }
+      ]
+    },
+    "models": {
+      "xgboost": {
+        "name": "xgboost",
+        "metrics": {
+          "rmse": 4.925014,
+          "r2": 0.842508
+        },
+        "std": {
+          "rmse": 0.12806,
+          "r2": 0.010376
+        },
+        "folds": [
+          {
+            "rmse": 5.132356,
+            "r2": 0.827553
+          },
+          {
+            "rmse": 4.759256,
+            "r2": 0.852711
+          },
+          {
+            "rmse": 4.827751,
+            "r2": 0.854398
+          },
+          {
+            "rmse": 4.93672,
+            "r2": 0.843613
+          },
+          {
+            "rmse": 4.968987,
+            "r2": 0.834265
+          }
+        ]
+      },
+      "lightgbm": {
+        "name": "lightgbm",
+        "metrics": {
+          "rmse": 4.871367,
+          "r2": 0.845837
+        },
+        "std": {
+          "rmse": 0.146143,
+          "r2": 0.01177
+        },
+        "folds": [
+          {
+            "rmse": 5.113851,
+            "r2": 0.828794
+          },
+          {
+            "rmse": 4.752298,
+            "r2": 0.853141
+          },
+          {
+            "rmse": 4.695565,
+            "r2": 0.862262
+          },
+          {
+            "rmse": 4.869862,
+            "r2": 0.84782
+          },
+          {
+            "rmse": 4.925258,
+            "r2": 0.83717
+          }
+        ]
+      },
+      "catboost": {
+        "name": "catboost",
+        "metrics": {
+          "rmse": 4.753767,
+          "r2": 0.853217
+        },
+        "std": {
+          "rmse": 0.134826,
+          "r2": 0.010648
+        },
+        "folds": [
+          {
+            "rmse": 4.97235,
+            "r2": 0.838137
+          },
+          {
+            "rmse": 4.636142,
+            "r2": 0.860232
+          },
+          {
+            "rmse": 4.58945,
+            "r2": 0.868417
+          },
+          {
+            "rmse": 4.773851,
+            "r2": 0.853762
+          },
+          {
+            "rmse": 4.797041,
+            "r2": 0.845537
+          }
+        ]
+      }
+    },
+    "best": "catboost",
+    "improvement_over_baseline": {
+      "r2": -0.00275,
+      "rmse": 0.04657
+    },
+    "feature_importances": {
+      "xgboost": {
+        "ad_budget": 0.958034,
+        "num_leads": 0.004449,
+        "leads_answered": 0.006918,
+        "answer_rate": 0.003947,
+        "cost_per_lead": 0.004112,
+        "budget_per_answered_lead": 0.003581,
+        "followup_1": 0.003266,
+        "followup_2": 0.003597,
+        "stage_retention_1": 0.00381,
+        "stage_retention_2": 0.004039,
+        "stage_to_stage_retention_1": 0.0,
+        "stage_to_stage_retention_2": 0.004249,
+        "stage_dropout_1": 0.0,
+        "stage_dropout_2": 0.0
+      },
+      "lightgbm": {
+        "ad_budget": 0.045204,
+        "num_leads": 0.120009,
+        "leads_answered": 0.044975,
+        "answer_rate": 0.187701,
+        "cost_per_lead": 0.117256,
+        "budget_per_answered_lead": 0.063102,
+        "followup_1": 0.042451,
+        "followup_2": 0.037173,
+        "stage_retention_1": 0.120468,
+        "stage_retention_2": 0.111749,
+        "stage_to_stage_retention_1": 0.0,
+        "stage_to_stage_retention_2": 0.088343,
+        "stage_dropout_1": 0.013309,
+        "stage_dropout_2": 0.008261
+      },
+      "catboost": {
+        "ad_budget": 0.918026,
+        "num_leads": 0.017995,
+        "leads_answered": 0.002594,
+        "answer_rate": 0.004532,
+        "cost_per_lead": 0.005982,
+        "budget_per_answered_lead": 0.036383,
+        "followup_1": 0.001965,
+        "followup_2": 0.001732,
+        "stage_retention_1": 0.00186,
+        "stage_retention_2": 0.00203,
+        "stage_to_stage_retention_1": 0.001963,
+        "stage_to_stage_retention_2": 0.001459,
+        "stage_dropout_1": 0.001259,
+        "stage_dropout_2": 0.002222
+      }
+    }
+  },
+  "package_3_upsell": {
+    "package": "Package 3 - campaign upsell",
+    "target": "upsell",
+    "checkpoint": "C2",
+    "features": [
+      "ad_budget",
+      "num_leads",
+      "leads_answered",
+      "answer_rate",
+      "cost_per_lead",
+      "budget_per_answered_lead",
+      "followup_1",
+      "followup_2",
+      "stage_retention_1",
+      "stage_retention_2",
+      "stage_to_stage_retention_1",
+      "stage_to_stage_retention_2",
+      "stage_dropout_1",
+      "stage_dropout_2"
+    ],
+    "rows": 3490,
+    "positive_rate": 0.420057,
+    "baseline": {
+      "name": "baseline_majority_class",
+      "metrics": {
+        "accuracy": 0.579943,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "std": {
+        "accuracy": 0.000573,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "folds": [
+        {
+          "accuracy": 0.580229,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "accuracy": 0.580229,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "accuracy": 0.580229,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "accuracy": 0.580229,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "accuracy": 0.578797,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        }
+      ]
+    },
+    "models": {
+      "xgboost": {
+        "name": "xgboost",
+        "metrics": {
+          "accuracy": 0.716046,
+          "precision": 0.642264,
+          "recall": 0.731905,
+          "f1": 0.683646
+        },
+        "std": {
+          "accuracy": 0.024286,
+          "precision": 0.025089,
+          "recall": 0.047216,
+          "f1": 0.030111
+        },
+        "folds": [
+          {
+            "accuracy": 0.700573,
+            "precision": 0.628834,
+            "recall": 0.699659,
+            "f1": 0.662359
+          },
+          {
+            "accuracy": 0.732092,
+            "precision": 0.673203,
+            "recall": 0.703072,
+            "f1": 0.687813
+          },
+          {
+            "accuracy": 0.746418,
+            "precision": 0.661111,
+            "recall": 0.812287,
+            "f1": 0.728943
+          },
+          {
+            "accuracy": 0.67765,
+            "precision": 0.601796,
+            "recall": 0.686007,
+            "f1": 0.641148
+          },
+          {
+            "accuracy": 0.723496,
+            "precision": 0.646377,
+            "recall": 0.758503,
+            "f1": 0.697966
+          }
+        ]
+      },
+      "lightgbm": {
+        "name": "lightgbm",
+        "metrics": {
+          "accuracy": 0.716332,
+          "precision": 0.640904,
+          "recall": 0.740083,
+          "f1": 0.686504
+        },
+        "std": {
+          "accuracy": 0.017382,
+          "precision": 0.019916,
+          "recall": 0.03453,
+          "f1": 0.020477
+        },
+        "folds": [
+          {
+            "accuracy": 0.702006,
+            "precision": 0.629179,
+            "recall": 0.706485,
+            "f1": 0.665595
+          },
+          {
+            "accuracy": 0.730659,
+            "precision": 0.66881,
+            "recall": 0.709898,
+            "f1": 0.688742
+          },
+          {
+            "accuracy": 0.73639,
+            "precision": 0.655271,
+            "recall": 0.784983,
+            "f1": 0.714286
+          },
+          {
+            "accuracy": 0.690544,
+            "precision": 0.611594,
+            "recall": 0.720137,
+            "f1": 0.661442
+          },
+          {
+            "accuracy": 0.722063,
+            "precision": 0.639665,
+            "recall": 0.778912,
+            "f1": 0.702454
+          }
+        ]
+      },
+      "catboost": {
+        "name": "catboost",
+        "metrics": {
+          "accuracy": 0.730372,
+          "precision": 0.653304,
+          "recall": 0.763976,
+          "f1": 0.703942
+        },
+        "std": {
+          "accuracy": 0.022551,
+          "precision": 0.022933,
+          "recall": 0.039751,
+          "f1": 0.025969
+        },
+        "folds": [
+          {
+            "accuracy": 0.726361,
+            "precision": 0.651786,
+            "recall": 0.74744,
+            "f1": 0.696343
+          },
+          {
+            "accuracy": 0.737822,
+            "precision": 0.674051,
+            "recall": 0.726962,
+            "f1": 0.699507
+          },
+          {
+            "accuracy": 0.765043,
+            "precision": 0.67867,
+            "recall": 0.836177,
+            "f1": 0.749235
+          },
+          {
+            "accuracy": 0.694842,
+            "precision": 0.614286,
+            "recall": 0.733788,
+            "f1": 0.66874
+          },
+          {
+            "accuracy": 0.727794,
+            "precision": 0.647727,
+            "recall": 0.77551,
+            "f1": 0.705882
+          }
+        ]
+      }
+    },
+    "best": "catboost",
+    "improvement_over_baseline": {
+      "f1": 0.703942,
+      "accuracy": 0.15043
+    },
+    "feature_importances": {
+      "catboost": {
+        "ad_budget": 0.278567,
+        "num_leads": 0.105613,
+        "leads_answered": 0.047988,
+        "answer_rate": 0.078926,
+        "cost_per_lead": 0.102284,
+        "budget_per_answered_lead": 0.057523,
+        "followup_1": 0.047757,
+        "followup_2": 0.04719,
+        "stage_retention_1": 0.035398,
+        "stage_retention_2": 0.057169,
+        "stage_to_stage_retention_1": 0.022418,
+        "stage_to_stage_retention_2": 0.04447,
+        "stage_dropout_1": 0.035322,
+        "stage_dropout_2": 0.039376
+      }
+    }
+  },
+  "package_4_referral": {
+    "package": "Package 4 - campaign referral / super-customer score",
+    "target": "referred",
+    "checkpoint": "C1",
+    "features": [
+      "ad_budget",
+      "num_leads",
+      "leads_answered",
+      "answer_rate",
+      "cost_per_lead",
+      "budget_per_answered_lead"
+    ],
+    "rows": 3490,
+    "search_space_size": 12,
+    "search": [
+      {
+        "params": {
+          "learning_rate": 0.03,
+          "depth": 4,
+          "iterations": 300
+        },
+        "f1": 0.717589
+      },
+      {
+        "params": {
+          "learning_rate": 0.03,
+          "depth": 6,
+          "iterations": 300
+        },
+        "f1": 0.715827
+      },
+      {
+        "params": {
+          "learning_rate": 0.03,
+          "depth": 8,
+          "iterations": 300
+        },
+        "f1": 0.715163
+      },
+      {
+        "params": {
+          "learning_rate": 0.03,
+          "depth": 4,
+          "iterations": 600
+        },
+        "f1": 0.709943
+      },
+      {
+        "params": {
+          "learning_rate": 0.03,
+          "depth": 6,
+          "iterations": 600
+        },
+        "f1": 0.702875
+      },
+      {
+        "params": {
+          "learning_rate": 0.1,
+          "depth": 4,
+          "iterations": 300
+        },
+        "f1": 0.70053
+      },
+      {
+        "params": {
+          "learning_rate": 0.03,
+          "depth": 8,
+          "iterations": 600
+        },
+        "f1": 0.695427
+      },
+      {
+        "params": {
+          "learning_rate": 0.1,
+          "depth": 4,
+          "iterations": 600
+        },
+        "f1": 0.689246
+      },
+      {
+        "params": {
+          "learning_rate": 0.1,
+          "depth": 6,
+          "iterations": 300
+        },
+        "f1": 0.686157
+      },
+      {
+        "params": {
+          "learning_rate": 0.1,
+          "depth": 8,
+          "iterations": 300
+        },
+        "f1": 0.68249
+      },
+      {
+        "params": {
+          "learning_rate": 0.1,
+          "depth": 6,
+          "iterations": 600
+        },
+        "f1": 0.67065
+      },
+      {
+        "params": {
+          "learning_rate": 0.1,
+          "depth": 8,
+          "iterations": 600
+        },
+        "f1": 0.660945
+      }
+    ],
+    "best_params": {
+      "learning_rate": 0.03,
+      "depth": 4,
+      "iterations": 300
+    },
+    "best": {
+      "name": "catboost_0.03_4_300",
+      "metrics": {
+        "accuracy": 0.751289,
+        "precision": 0.641999,
+        "recall": 0.813858,
+        "f1": 0.717589
+      },
+      "std": {
+        "accuracy": 0.018427,
+        "precision": 0.022181,
+        "recall": 0.019068,
+        "f1": 0.018201
+      },
+      "folds": [
+        {
+          "accuracy": 0.740688,
+          "precision": 0.634441,
+          "recall": 0.777778,
+          "f1": 0.698835
+        },
+        {
+          "accuracy": 0.734957,
+          "precision": 0.620112,
+          "recall": 0.819188,
+          "f1": 0.705882
+        },
+        {
+          "accuracy": 0.772206,
+          "precision": 0.664706,
+          "recall": 0.833948,
+          "f1": 0.739771
+        },
+        {
+          "accuracy": 0.733524,
+          "precision": 0.619048,
+          "recall": 0.815498,
+          "f1": 0.703822
+        },
+        {
+          "accuracy": 0.775072,
+          "precision": 0.671687,
+          "recall": 0.822878,
+          "f1": 0.739635
+        }
+      ]
+    },
+    "baseline": {
+      "name": "baseline_majority_class",
+      "metrics": {
+        "accuracy": 0.612034,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "std": {
+        "accuracy": 0.000573,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "folds": [
+        {
+          "accuracy": 0.613181,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "accuracy": 0.611748,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "accuracy": 0.611748,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "accuracy": 0.611748,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        {
+          "accuracy": 0.611748,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        }
+      ]
+    },
+    "improvement_over_baseline": {
+      "f1": 0.717589,
+      "accuracy": 0.139255
+    },
+    "feature_importances": {
+      "ad_budget": 0.584979,
+      "num_leads": 0.105814,
+      "leads_answered": 0.048766,
+      "answer_rate": 0.069633,
+      "cost_per_lead": 0.124046,
+      "budget_per_answered_lead": 0.066763
+    }
+  },
+  "package_6_profit": {
+    "package": "Package 6 - campaign profit, pre-launch",
+    "target": "cumulative_profit",
+    "checkpoint": "C0",
+    "features": [
+      "ad_budget"
+    ],
+    "rows": 3461,
+    "baseline": {
+      "name": "baseline_budget_group_mean",
+      "metrics": {
+        "rmse": 6633.23465,
+        "r2": 0.648786
+      },
+      "std": {
+        "rmse": 1153.061358,
+        "r2": 0.082097
+      },
+      "folds": [
+        {
+          "rmse": 4730.706242,
+          "r2": 0.780144
+        },
+        {
+          "rmse": 5966.321227,
+          "r2": 0.699647
+        },
+        {
+          "rmse": 7032.946573,
+          "r2": 0.631168
+        },
+        {
+          "rmse": 7904.822745,
+          "r2": 0.565997
+        },
+        {
+          "rmse": 7531.376464,
+          "r2": 0.566975
+        }
+      ]
+    },
+    "models": {
+      "xgboost": {
+        "name": "xgboost",
+        "metrics": {
+          "rmse": 6633.234568,
+          "r2": 0.648786
+        },
+        "std": {
+          "rmse": 1153.06133,
+          "r2": 0.082097
+        },
+        "folds": [
+          {
+            "rmse": 4730.706053,
+            "r2": 0.780144
+          },
+          {
+            "rmse": 5966.32154,
+            "r2": 0.699647
+          },
+          {
+            "rmse": 7032.946427,
+            "r2": 0.631168
+          },
+          {
+            "rmse": 7904.822992,
+            "r2": 0.565997
+          },
+          {
+            "rmse": 7531.375828,
+            "r2": 0.566975
+          }
+        ]
+      },
+      "lightgbm": {
+        "name": "lightgbm",
+        "metrics": {
+          "rmse": 6633.234646,
+          "r2": 0.648786
+        },
+        "std": {
+          "rmse": 1153.06135,
+          "r2": 0.082097
+        },
+        "folds": [
+          {
+            "rmse": 4730.706227,
+            "r2": 0.780144
+          },
+          {
+            "rmse": 5966.321263,
+            "r2": 0.699647
+          },
+          {
+            "rmse": 7032.946627,
+            "r2": 0.631168
+          },
+          {
+            "rmse": 7904.822774,
+            "r2": 0.565997
+          },
+          {
+            "rmse": 7531.376342,
+            "r2": 0.566975
+          }
+        ]
+      },
+      "catboost": {
+        "name": "catboost",
+        "metrics": {
+          "rmse": 6632.787934,
+          "r2": 0.648835
+        },
+        "std": {
+          "rmse": 1152.966198,
+          "r2": 0.082078
+        },
+        "folds": [
+          {
+            "rmse": 4730.527157,
+            "r2": 0.780161
+          },
+          {
+            "rmse": 5965.495921,
+            "r2": 0.69973
+          },
+          {
+            "rmse": 7033.316756,
+            "r2": 0.631129
+          },
+          {
+            "rmse": 7904.41586,
+            "r2": 0.566041
+          },
+          {
+            "rmse": 7530.183974,
+            "r2": 0.567112
+          }
+        ]
+      }
+    },
+    "best": "catboost",
+    "improvement_over_baseline": {
+      "r2": 4.9e-05,
+      "rmse": -0.446717
+    },
+    "feature_importances": {
+      "xgboost": {
+        "ad_budget": 1.0
+      },
+      "lightgbm": {
+        "ad_budget": 1.0
+      },
+      "catboost": {
+        "ad_budget": 1.0
+      }
+    }
+  },
+  "leakage_smoke_test": {
+    "description": "LTV model trained at its honest checkpoint versus with post-campaign columns the feature policy forbids.",
+    "honest": {
+      "name": "honest_C2",
+      "metrics": {
+        "rmse": 4.753767,
+        "r2": 0.853217
+      },
+      "std": {
+        "rmse": 0.134826,
+        "r2": 0.010648
+      },
+      "folds": [
+        {
+          "rmse": 4.97235,
+          "r2": 0.838137
+        },
+        {
+          "rmse": 4.636142,
+          "r2": 0.860232
+        },
+        {
+          "rmse": 4.58945,
+          "r2": 0.868417
+        },
+        {
+          "rmse": 4.773851,
+          "r2": 0.853762
+        },
+        {
+          "rmse": 4.797041,
+          "r2": 0.845537
+        }
+      ]
+    },
+    "leaky": {
+      "name": "leaky_C3",
+      "metrics": {
+        "rmse": 2.888836,
+        "r2": 0.945633
+      },
+      "std": {
+        "rmse": 0.177675,
+        "r2": 0.007171
+      },
+      "folds": [
+        {
+          "rmse": 3.186904,
+          "r2": 0.933509
+        },
+        {
+          "rmse": 2.921281,
+          "r2": 0.944507
+        },
+        {
+          "rmse": 2.673451,
+          "r2": 0.95535
+        },
+        {
+          "rmse": 2.917664,
+          "r2": 0.945375
+        },
+        {
+          "rmse": 2.744881,
+          "r2": 0.949426
+        }
+      ]
+    },
+    "r2_inflation": 0.092416,
+    "honest_features": [
+      "ad_budget",
+      "num_leads",
+      "leads_answered",
+      "answer_rate",
+      "cost_per_lead",
+      "budget_per_answered_lead",
+      "followup_1",
+      "followup_2",
+      "stage_retention_1",
+      "stage_retention_2",
+      "stage_to_stage_retention_1",
+      "stage_to_stage_retention_2",
+      "stage_dropout_1",
+      "stage_dropout_2"
+    ],
+    "leaked_columns": [
+      "calls_to_closed",
+      "calls_to_not_closed",
+      "close_rate_funnel",
+      "close_rate_leads",
+      "closed",
+      "customer_acquisition_cost",
+      "followup_3",
+      "followup_4",
+      "followup_5",
+      "followup_efficiency",
+      "not_closed",
+      "stage_dropout_3",
+      "stage_dropout_4",
+      "stage_dropout_5",
+      "stage_retention_3",
+      "stage_retention_4",
+      "stage_retention_5",
+      "stage_to_stage_retention_3",
+      "stage_to_stage_retention_4",
+      "stage_to_stage_retention_5"
+    ]
+  }
+}

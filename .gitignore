@@ -33,3 +33,6 @@ venv/
 *.db
 *.sqlite3
 data/scratch/
+
+# CatBoost writes training logs beside the working directory on every fit.
+catboost_info/
