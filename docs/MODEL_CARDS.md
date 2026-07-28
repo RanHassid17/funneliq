@@ -25,9 +25,17 @@ dropped rather than imputed, and every model is reported against a naive baselin
 
 ### ⚠️ Do not deploy this model. Ship the baseline.
 
-Gradient boosting did not beat a group mean over `ad_budget`. This is not a tuning failure:
-`ad_budget` has 16 distinct values and drives the target almost entirely, so a group mean over
-those 16 categories is already near-optimal. The funnel features add nothing on top.
+Gradient boosting did not beat a group mean over `ad_budget`, and **tuning does not rescue it**.
+
+A sweep of **114 configurations** across all three libraries (`reports/tuning_ltv.json`, reproduce
+with `python -m funneliq.models.tuning`) found **zero** that beat the baseline. The best tuned
+model — XGBoost at `lr 0.01, depth 2, 900 trees` — reached R² 0.854965 against the baseline's
+0.855967, still short by 0.001.
+
+Every top configuration is shallow with a low learning rate: the tuner's best available move is to
+make the model *simpler*, converging toward the group mean without reaching it. `ad_budget` has 16
+distinct values and drives the target almost entirely, so a mean per budget level is close to the
+ceiling and the funnel features add nothing on top.
 
 A 300-tree ensemble here buys latency, dependencies and opacity in exchange for slightly worse
 accuracy. The artifact is kept for reproducibility and comparison, not for production.

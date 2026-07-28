@@ -191,6 +191,21 @@ def test_every_package_reports_against_a_baseline() -> None:
         assert "improvement_over_baseline" in results[key]
 
 
+@pytest.mark.skipif(not (REPORTS_DIR / "tuning_ltv.json").exists(), reason="tuning sweep not run")
+def test_tuning_sweep_confirms_the_baseline_wins() -> None:
+    """The claim in REPORT.md is that TUNED boosting still loses, not just untuned.
+
+    If a future change makes some configuration win, this fails and the write-up
+    needs correcting -- which is the point. The finding is only worth stating
+    because it is checked.
+    """
+    result = json.loads((REPORTS_DIR / "tuning_ltv.json").read_text())
+
+    assert result["configs_tested"] >= 100, "sweep too small to support the claim"
+    assert result["configs_beating_baseline"] == 0
+    assert result["best"]["delta_r2_vs_baseline"] < 0
+
+
 def test_no_nan_metrics_in_reports() -> None:
     """A NaN metric is a silent failure that looks like a number in a table."""
     if not (REPORTS_DIR / "models.json").exists():
