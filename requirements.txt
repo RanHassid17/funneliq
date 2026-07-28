@@ -1,0 +1,7 @@
+# Pinned for reproducibility (Brief §07: "Pin your dependencies").
+# Kept deliberately small at Phase 0 — the skeleton deploys before there is real
+# code, so the Railway build stays fast and deploy failures stay easy to read.
+# Data, ML and Supabase dependencies are added by the phase that first needs them.
+
+fastapi==0.140.7
+uvicorn[standard]==0.51.0
