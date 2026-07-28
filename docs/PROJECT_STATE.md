@@ -5,13 +5,13 @@ able to read this file plus `PLAN.md` and resume without redoing discovery.
 
 **Never put secrets in this file.** Keys live in `.env` (gitignored) and in Railway variables.
 
-Last updated: 2026-07-28 · after Phase 4
+Last updated: 2026-07-28 · after Phase 5
 
 ---
 
 ## Current milestone
 
-**Phases 0–4 complete** (PRs #1–#7 merged). Next: **Phase 5 — dashboard**.
+**Phases 0–5 complete** (PRs #1–#8 merged). Next: **Phase 6 — CrewAI analyst**.
 
 The API is live and login-gated: `/api/*` returns 401 without a valid Supabase JWT, `/api/campaigns` reads Postgres per request, and predictions are served from the committed model artifacts. Interactive docs at `/docs`.
 
@@ -104,7 +104,7 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | What | Evidence |
 |---|---|
 | CI green | `secret-scan` ✓, `test` ✓ on every push |
-| Local toolchain | ruff clean, ruff format clean, **107 tests pass** |
+| Local toolchain | ruff clean, ruff format clean, **110 tests pass** |
 | Live health | `HTTP 200`, `commit: 40924787…` matching `master` HEAD |
 | Push triggers redeploy | `4092478` deployed with `reason: deploy` |
 | Survives restart | forced redeploy reset uptime 206.3s → 19.7s, recovered unattended |
@@ -114,7 +114,9 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | **RLS blocks anonymous read** | `HTTP 401`, `42501 permission denied for table campaigns` |
 | **RLS blocks anonymous insert** | `HTTP 401`, same refusal |
 | Quality flags persisted | 4 rows `ltv_months_missing`, 29 `cumulative_profit_missing` |
-| Feature branches + PRs | PR #1–#7 merged |
+| Feature branches + PRs | PR #1–#8 merged |
+| **Dashboard live** | `/` login screen, `/dashboard.html` panels, both serving on Railway |
+| **Anon key only in browser** | `/api/config` serves URL + anon key; a test asserts the service-role key can never appear there |
 | **Auth gate verified** | 10 protected routes return 401 for no/forged/expired/wrong-audience/malformed/subject-less tokens |
 | **Live runtime Supabase read** | `/ready` on the deployed service reports 3,490 campaigns reachable |
 | Deployed predictions work | live `/api/predict/referral-score` returns 75.0, matching local |
@@ -165,23 +167,25 @@ macOS/iCloud produced a set of `"<name> 2.py"` duplicate files that were committ
 the test run — pytest collected stale copies alongside the real modules. They are now removed and
 `.gitignore`d. If tests suddenly fail on names that look already-fixed, check for them again.
 
+## Login
+
+No user account exists yet in Supabase Auth. The login screen's **Create account** button
+self-serves it. Depending on project settings Supabase may require email confirmation.
+
 ## Next action
 
-**Phase 4 — API + auth**, on branch `feat/api` then `feat/auth`. Per `PLAN.md` §9:
+**Phase 6 — CrewAI analyst**, on branch `feat/crew`. Per `PLAN.md` §9:
 
-1. Prediction endpoints: `POST /api/predict/{ltv,upsell,referral-score}`,
-   `POST /api/budget/simulate`, `GET /api/funnel/dropout`.
-2. `GET /api/campaigns` and `GET /api/campaigns/compare?a=&b=` reading **live from Supabase** —
-   this satisfies the brief's runtime-read requirement.
-3. `auth.py` verifying the Supabase JWT on every protected route. `/health` stays public;
-   everything else returns 401 without a valid token.
-4. A readiness endpoint that *does* check Supabase, kept separate from `/health`.
+1. Offline crew: `python -m funneliq.crew.run --stage analysis` drafting REPORT sections from
+   `reports/*.json`. No runtime cost.
+2. Runtime: `POST /api/ask`, auth-gated, answering campaign questions from the dashboard.
+   Must return **503 with a clear message** when `ANTHROPIC_API_KEY` is unset, never crash.
+3. Agent prompts must carry the campaign-level rule so an agent cannot drift into
+   customer-level phrasing.
 
-**Serve the baseline, not the ensemble, for `ltv_months` and `cumulative_profit`** — see the
-milestone section above.
+**Verify CrewAI works on Python 3.13 first** — `PLAN.md` §13 flags this; pin 3.11/3.12 in the
+Railway runtime if not.
 
-**Prerequisite:** set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and
-`SUPABASE_JWT_SECRET` as Railway service variables. They exist locally in `.env` but not yet on
-the deployed service.
+Then **Phase 7 (QA + traceability)** and **Phase 8 (docs)**.
 
-🔒 Security review before merge. Owner: Backend Engineer.
+Owner: Data & ML Engineer.
