@@ -6,7 +6,11 @@ long-lived customers, where leads fall out of the follow-up sequence, and how to
 ₪50,000 monthly ad budget.
 
 **Live URL:** <https://funneliq-api-production.up.railway.app>
-· health check: [`/health`](https://funneliq-api-production.up.railway.app/health)
+· [`/health`](https://funneliq-api-production.up.railway.app/health)
+· [`/ready`](https://funneliq-api-production.up.railway.app/ready)
+· [`/docs`](https://funneliq-api-production.up.railway.app/docs)
+
+Open the live URL, create an account, and the dashboard answers all six work packages.
 
 > **Build status: Phase 0 of 8 complete.** The skeleton is deployed on Railway with CI green.
 > Data, models, auth and the dashboard land in later phases. [`PLAN.md`](PLAN.md) is the full
@@ -112,6 +116,20 @@ the feature code — [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) has th
 Assumptions that could not be settled from the data are tracked in
 [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md); metric definitions are in
 [`docs/GLOSSARY.md`](docs/GLOSSARY.md).
+
+## Dashboard
+
+| Route | |
+|---|---|
+| `/` | Login screen — Supabase Auth, email + password |
+| `/dashboard.html` | Panels for every work package |
+
+The dashboard is plain HTML/CSS/JS with no build step. The browser holds **only** the public anon
+key and the session JWT Supabase issued it; the API verifies that token server-side and holds the
+service-role key. `/api/config` serves the public values at runtime so no key is ever committed —
+and a test asserts the service-role key can never appear in that response.
+
+A logged-out visitor is redirected before any panel renders, and sign-out clears the session.
 
 ## API
 

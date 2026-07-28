@@ -22,6 +22,9 @@ class Settings:
     supabase_url: str
     supabase_service_role_key: str
     supabase_jwt_secret: str
+    #: PUBLIC. Safe in the browser -- it is what the login screen authenticates
+    #: with, and Row Level Security is what actually protects the data.
+    supabase_anon_key: str
 
     @property
     def rest_url(self) -> str:
@@ -50,6 +53,7 @@ def get_settings() -> Settings:
         supabase_url=_required("SUPABASE_URL"),
         supabase_service_role_key=_required("SUPABASE_SERVICE_ROLE_KEY"),
         supabase_jwt_secret=_required("SUPABASE_JWT_SECRET"),
+        supabase_anon_key=_required("SUPABASE_ANON_KEY"),
     )
 
 

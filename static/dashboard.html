@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard · FunnelIQ</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">Funnel<span>IQ</span></div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span class="who" id="who"></span>
+    <button id="signout" class="secondary inline" type="button">Sign out</button>
+  </div>
+</header>
+
+<main>
+  <!-- Every label below says CAMPAIGN. The dataset is one row per advertising
+       campaign, so a customer-level reading of any number here would be a
+       category error. -->
+
+  <section class="panel wide">
+    <h2>Campaign inputs</h2>
+    <p class="hint">
+      Describe a campaign as it stands after follow-up 2. Predictions update together.
+    </p>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+      <div><label for="ad_budget">Ad budget (₪)</label><input id="ad_budget" type="number" value="3000" min="1" step="100"></div>
+      <div><label for="num_leads">Leads</label><input id="num_leads" type="number" value="40" min="0"></div>
+      <div><label for="leads_answered">Answered</label><input id="leads_answered" type="number" value="26" min="0"></div>
+      <div><label for="followup_1">After follow-up 1</label><input id="followup_1" type="number" value="20" min="0"></div>
+      <div><label for="followup_2">After follow-up 2</label><input id="followup_2" type="number" value="15" min="0"></div>
+      <div style="display:flex;align-items:flex-end"><button id="predict" type="button">Predict</button></div>
+    </div>
+    <p id="predict-message" class="message" role="status" aria-live="polite"></p>
+  </section>
+
+  <div class="grid" style="margin-top:18px">
+
+    <section class="panel">
+      <h2>Campaign lifetime</h2>
+      <p class="hint">Average months the customers from this campaign stay.</p>
+      <div id="ltv-body"><p class="state">Not predicted yet.</p></div>
+    </section>
+
+    <section class="panel">
+      <h2>Upsell likelihood</h2>
+      <p class="hint">Chance this campaign produces at least one upsell.</p>
+      <div id="upsell-body"><p class="state">Not predicted yet.</p></div>
+    </section>
+
+    <section class="panel">
+      <h2>Super-customer score</h2>
+      <p class="hint">Campaign referral likelihood, 0–100.</p>
+      <div id="referral-body"><p class="state">Not predicted yet.</p></div>
+    </section>
+
+    <section class="panel">
+      <h2>Pre-launch profit</h2>
+      <p class="hint">Expected total profit, from budget alone.</p>
+      <div id="profit-body"><p class="state">Not predicted yet.</p></div>
+    </section>
+
+    <section class="panel wide">
+      <h2>Follow-up dropout</h2>
+      <p class="hint">Share of leads lost at each stage, across every campaign.</p>
+      <div id="funnel-body"><p class="state">Loading…</p></div>
+    </section>
+
+    <section class="panel wide">
+      <h2>Monthly budget simulator</h2>
+      <p class="hint">How to split a monthly budget across campaigns.</p>
+      <div class="row" style="max-width:420px">
+        <div><label for="monthly_budget">Monthly budget (₪)</label><input id="monthly_budget" type="number" value="50000" min="1" step="1000"></div>
+        <div style="display:flex;align-items:flex-end"><button id="simulate" type="button">Simulate</button></div>
+      </div>
+      <div id="budget-body"><p class="state">Loading…</p></div>
+    </section>
+
+    <section class="panel wide">
+      <h2>Compare campaigns</h2>
+      <p class="hint">Two campaigns side by side, read live from the database.</p>
+      <div class="row" style="max-width:560px">
+        <div><label for="cmp-a">Campaign A</label><select id="cmp-a"></select></div>
+        <div><label for="cmp-b">Campaign B</label><select id="cmp-b"></select></div>
+      </div>
+      <button id="compare" class="inline" type="button">Compare</button>
+      <div id="compare-body"><p class="state">Pick two campaigns.</p></div>
+    </section>
+
+    <section class="panel wide">
+      <h2>Models in service</h2>
+      <p class="hint">
+        What answers each question, and how it scored against a naive baseline.
+      </p>
+      <div id="models-body"><p class="state">Loading…</p></div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  FunnelIQ · one row = one advertising campaign, never one customer ·
+  <a href="/docs">API docs</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

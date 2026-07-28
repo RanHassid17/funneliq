@@ -41,6 +41,7 @@ def configured_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key")
     monkeypatch.setenv("SUPABASE_JWT_SECRET", TEST_SECRET)
+    monkeypatch.setenv("SUPABASE_ANON_KEY", "test-anon-key")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
@@ -136,6 +137,44 @@ def test_error_message_does_not_leak_why_verification_failed(client: TestClient)
 
     assert "signature" not in detail.lower()
     assert "secret" not in detail.lower()
+
+
+# --- The public config endpoint ---------------------------------------------
+
+
+def test_public_config_serves_the_anon_key(client: TestClient) -> None:
+    """The browser needs the project URL and anon key to run the login screen."""
+    body = client.get("/api/config").json()
+
+    assert body["supabaseUrl"] == "https://example.supabase.co"
+    assert body["supabaseAnonKey"] == "test-anon-key"
+
+
+def test_public_config_never_exposes_the_service_role_key(client: TestClient) -> None:
+    """The single most damaging mistake this project could make.
+
+    The service-role key bypasses Row Level Security. If it ever reached the
+    browser, every campaign row would be readable by anyone who opened devtools,
+    and RLS would be decoration.
+    """
+    raw = client.get("/api/config").text
+
+    assert "test-service-role-key" not in raw
+    assert "service" not in raw.lower().replace("supabaseurl", "")
+
+
+def test_static_pages_are_public_but_carry_no_data(client: TestClient) -> None:
+    """Serving the dashboard shell is safe; its data still needs a session.
+
+    The page is static HTML. Every number on it arrives through the API, which
+    requires a verified token, and the client redirects to the login screen
+    before rendering if there is no session.
+    """
+    page = client.get("/dashboard.html")
+
+    assert page.status_code == 200
+    assert "campaign" in page.text.lower()
+    assert "eyJ" not in page.text, "no JWT may be baked into the page"
 
 
 # --- Public routes ----------------------------------------------------------
