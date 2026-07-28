@@ -13,7 +13,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 # src layout: tests import funneliq without needing an editable install.
-pythonpath = ["src"]
+pythonpath = ["src", "tests"]
 testpaths = ["tests"]
 
 [tool.ruff]

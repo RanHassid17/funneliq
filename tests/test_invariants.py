@@ -14,33 +14,7 @@ import pytest
 from funneliq.data.invariants import evaluate
 from funneliq.data.load_to_supabase import prepare
 from funneliq.data.profile import load_raw
-
-
-def make_row(**overrides: object) -> dict[str, object]:
-    """A campaign that satisfies every invariant, for tests to selectively break."""
-    row: dict[str, object] = {
-        "ad_budget": 4000,
-        "num_leads": 48,
-        "leads_answered": 32,
-        "leads_not_answered": 16,
-        "followup_1": 25,
-        "followup_2": 18,
-        "followup_3": 15,
-        "followup_4": 13,
-        "followup_5": 9,
-        "not_closed": 4,
-        "closed": 5,
-        "calls_to_closed": 3,
-        "calls_to_not_closed": 3,
-        "customer_acquisition_cost": 800,
-        "ltv_months": 28.0,
-        "purchased": 1,
-        "upsell": 0,
-        "cumulative_profit": 15048.0,
-        "referred": "Yes",
-    }
-    row.update(overrides)
-    return row
+from helpers import make_row
 
 
 def violations_for(name: str, **overrides: object) -> int:
