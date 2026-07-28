@@ -831,6 +831,56 @@
       }
     }
   },
+  "served_baselines": {
+    "ltv_months": {
+      "metrics": {
+        "rmse": 4.707196572813866,
+        "r2": 0.8559666674657201
+      },
+      "known_budgets": [
+        500.0,
+        800.0,
+        1000.0,
+        1500.0,
+        2000.0,
+        2500.0,
+        3000.0,
+        4000.0,
+        5000.0,
+        6000.0,
+        7000.0,
+        8000.0,
+        10000.0,
+        12000.0,
+        15000.0,
+        20000.0
+      ]
+    },
+    "cumulative_profit": {
+      "metrics": {
+        "rmse": 6633.234650317878,
+        "r2": 0.6487863215595875
+      },
+      "known_budgets": [
+        500.0,
+        800.0,
+        1000.0,
+        1500.0,
+        2000.0,
+        2500.0,
+        3000.0,
+        4000.0,
+        5000.0,
+        6000.0,
+        7000.0,
+        8000.0,
+        10000.0,
+        12000.0,
+        15000.0,
+        20000.0
+      ]
+    }
+  },
   "leakage_smoke_test": {
     "description": "LTV model trained at its honest checkpoint versus with post-campaign columns the feature policy forbids.",
     "honest": {

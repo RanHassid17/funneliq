@@ -96,14 +96,23 @@ CARDS = sorted(MODELS_DIR.glob("*.json")) if MODELS_DIR.exists() else []
 @pytest.mark.skipif(not CARDS, reason="models not built; run funneliq.models.train")
 @pytest.mark.parametrize("card_path", CARDS, ids=lambda p: p.stem)
 def test_saved_model_respects_the_current_feature_policy(card_path) -> None:
-    """A committed model must not contain a column the policy now forbids."""
+    """A committed model must not contain a column the policy now forbids.
+
+    Uses subset rather than equality: a model may legitimately use FEWER features
+    than its checkpoint allows -- the served baselines use `ad_budget` alone. What
+    must never happen is a feature from outside the allowlist.
+    """
     card = json.loads(card_path.read_text())
     target = card["target"]
+    allowed = set(feature_columns(target))
 
     leaked = set(card["features"]) & set(forbidden_columns(target))
+    outside = set(card["features"]) - allowed
 
     assert leaked == set(), f"{card_path.stem} was trained on forbidden columns {sorted(leaked)}"
-    assert card["features"] == feature_columns(target)
+    assert outside == set(), (
+        f"{card_path.stem} uses columns outside its allowlist {sorted(outside)}"
+    )
 
 
 @pytest.mark.skipif(not CARDS, reason="models not built; run funneliq.models.train")

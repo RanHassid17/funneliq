@@ -23,6 +23,7 @@ from ..data.load_to_supabase import prepare
 from ..data.metrics import add_derived_metrics
 from ..data.profile import load_raw
 from . import RANDOM_SEED, REPORTS_DIR
+from .baseline import BudgetGroupMeanRegressor
 from .estimators import classifiers, feature_importances, regressors
 from .evaluate import (
     CVResult,
@@ -266,6 +267,49 @@ def leakage_smoke_test(df: pd.DataFrame) -> dict[str, Any]:
     }
 
 
+def save_baseline_models(df: pd.DataFrame) -> dict[str, Any]:
+    """Persist the budget group-mean estimators the API actually serves.
+
+    Gradient boosting lost to this baseline on `ltv_months` (114 tuned
+    configurations, none beat it) and tied it on `cumulative_profit`, so these
+    are the artifacts the app should predict from. Saving them as first-class
+    models -- rather than leaving the baseline as a number in a report -- is what
+    makes "ship the baseline" an implementable recommendation.
+    """
+    saved: dict[str, Any] = {}
+    for target in ("ltv_months", "cumulative_profit"):
+        frame = _drop_missing_target(df, target)
+        y = frame[target].astype("float64")
+        budget = frame[["ad_budget"]]
+
+        model = BudgetGroupMeanRegressor().fit(budget, y)
+        scored = budget_group_mean_baseline(frame["ad_budget"], y)
+
+        card = ModelCard(
+            name=f"{target}_baseline",
+            target=target,
+            checkpoint=str(MODEL_CHECKPOINTS[target]),
+            features=["ad_budget"],
+            rows_trained=len(frame),
+            algorithm="budget_group_mean",
+            metrics=scored.metrics,
+            baseline_name=scored.name,
+            baseline_metrics=scored.metrics,
+            improvement=dict.fromkeys(scored.metrics, 0.0),
+            notes=[
+                "THIS is the model served in production for this target.",
+                "Gradient boosting did not beat it: see reports/tuning_ltv.json.",
+                "Predicts the mean outcome of campaigns sharing the same ad_budget.",
+            ],
+        )
+        save(model, card)
+        saved[target] = {
+            "metrics": scored.metrics,
+            "known_budgets": model.known_budgets(),
+        }
+    return saved
+
+
 def main() -> None:
     df = load_frame()
     print(f"Loaded {len(df)} campaigns with derived metrics.")
@@ -285,6 +329,9 @@ def main() -> None:
     results["package_6_profit"] = train_regression(
         df, "cumulative_profit", "Package 6 - campaign profit, pre-launch"
     )
+
+    print("Baselines the API serves ...")
+    results["served_baselines"] = save_baseline_models(df)
 
     print("Leakage smoke test ...")
     results["leakage_smoke_test"] = leakage_smoke_test(df)

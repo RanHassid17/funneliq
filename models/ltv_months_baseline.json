@@ -1,0 +1,30 @@
+{
+  "name": "ltv_months_baseline",
+  "target": "ltv_months",
+  "checkpoint": "C2",
+  "features": [
+    "ad_budget"
+  ],
+  "rows_trained": 3486,
+  "algorithm": "budget_group_mean",
+  "metrics": {
+    "rmse": 4.707196572813866,
+    "r2": 0.8559666674657201
+  },
+  "baseline_name": "baseline_budget_group_mean",
+  "baseline_metrics": {
+    "rmse": 4.707196572813866,
+    "r2": 0.8559666674657201
+  },
+  "improvement": {
+    "rmse": 0.0,
+    "r2": 0.0
+  },
+  "notes": [
+    "THIS is the model served in production for this target.",
+    "Gradient boosting did not beat it: see reports/tuning_ltv.json.",
+    "Predicts the mean outcome of campaigns sharing the same ad_budget."
+  ],
+  "seed": 42,
+  "git_sha": "b8b60ce36170b2d75986558349cd990d6809f5c2"
+}
