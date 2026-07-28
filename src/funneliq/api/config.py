@@ -21,6 +21,8 @@ class ConfigError(RuntimeError):
 class Settings:
     supabase_url: str
     supabase_service_role_key: str
+    #: Only needed by projects still signing tokens symmetrically. Projects on
+    #: asymmetric signing keys verify via JWKS and never use this.
     supabase_jwt_secret: str
     #: PUBLIC. Safe in the browser -- it is what the login screen authenticates
     #: with, and Row Level Security is what actually protects the data.
@@ -52,7 +54,7 @@ def get_settings() -> Settings:
     return Settings(
         supabase_url=_required("SUPABASE_URL"),
         supabase_service_role_key=_required("SUPABASE_SERVICE_ROLE_KEY"),
-        supabase_jwt_secret=_required("SUPABASE_JWT_SECRET"),
+        supabase_jwt_secret=os.environ.get("SUPABASE_JWT_SECRET", "").strip(),
         supabase_anon_key=_required("SUPABASE_ANON_KEY"),
     )
 
