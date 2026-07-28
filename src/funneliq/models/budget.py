@@ -111,9 +111,9 @@ def recommend(scenarios: list[Scenario]) -> dict[str, Any]:
 
 
 def main() -> None:
-    from .train import load_frame
+    from ..data.frames import load_campaign_frame
 
-    df = load_frame()
+    df = load_campaign_frame()
     result = recommend(simulate(df))
 
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
