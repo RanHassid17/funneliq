@@ -16,11 +16,14 @@ from __future__ import annotations
 
 import os
 import time
+from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
-from .config import settings_available
+from .config import ConfigError, get_settings, settings_available
 from .db import SupabaseError, count_campaigns
 from .predictors import ModelUnavailable, model_summary
 from .routes import campaigns, predictions
@@ -28,6 +31,9 @@ from .routes import campaigns, predictions
 # Recorded at import so /health can report process uptime. A restart resets it,
 # which is the evidence that verifies restart-survival on the deployed service.
 _STARTED_AT = time.monotonic()
+
+#: Resolved from the package so the app runs from any working directory.
+STATIC_DIR = Path(__file__).resolve().parents[3] / "static"
 
 app = FastAPI(
     title="FunnelIQ",
@@ -41,6 +47,31 @@ app = FastAPI(
 
 app.include_router(campaigns.router)
 app.include_router(predictions.router)
+
+
+@app.get("/api/config", tags=["ops"])
+def public_config() -> dict[str, str]:
+    """Public Supabase configuration for the browser.
+
+    Serves the project URL and the ANON key -- both public by design. The anon
+    key is what the login screen authenticates with, and Row Level Security is
+    what actually protects the data.
+
+    Delivered from the environment at runtime rather than baked into the HTML,
+    so no key is ever committed to the repository. The service-role key is not
+    exposed here and must never be.
+    """
+    try:
+        settings = get_settings()
+    except ConfigError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Supabase is not configured on this server.",
+        ) from exc
+    return {
+        "supabaseUrl": settings.supabase_url,
+        "supabaseAnonKey": settings.supabase_anon_key,
+    }
 
 
 def _commit_sha() -> str:
@@ -94,3 +125,24 @@ def ready() -> dict[str, Any]:
         "database": database,
         "models": models,
     }
+
+
+# Mounted last: FastAPI matches routes in order, so the API and probes above win
+# and only unmatched paths fall through to the dashboard files.
+if STATIC_DIR.is_dir():
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def login_page() -> FileResponse:
+        """The login screen. An unauthenticated visitor sees only this."""
+        return FileResponse(STATIC_DIR / "index.html")
+
+    @app.get("/dashboard.html", include_in_schema=False)
+    def dashboard_page() -> FileResponse:
+        """The dashboard shell.
+
+        Serving it does not leak data: every panel fetches through the API, which
+        requires a verified session, and app.js redirects to the login screen
+        before rendering if there is no session.
+        """
+        return FileResponse(STATIC_DIR / "dashboard.html")

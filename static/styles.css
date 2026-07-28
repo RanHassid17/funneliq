@@ -1,0 +1,211 @@
+/* FunnelIQ — internal tool styling.
+   Hand-written rather than generated: the surface is small, and one file with no
+   build step is easier to audit for the thing that matters here, which is that
+   no privileged credential ever reaches it. */
+
+:root {
+    --bg: #0f1115;
+    --surface: #171a21;
+    --surface-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #9aa3b2;
+    --accent: #4f8cff;
+    --good: #3ecf8e;
+    --warn: #ffb454;
+    --bad: #ff6b6b;
+    --radius: 10px;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg: #f6f7f9;
+        --surface: #ffffff;
+        --surface-2: #f0f2f5;
+        --border: #d9dee6;
+        --text: #14171d;
+        --muted: #5c6675;
+    }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+a { color: var(--accent); }
+
+/* --- Login ------------------------------------------------------------- */
+
+.login-wrap {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+}
+
+.brand { font-size: 24px; font-weight: 650; letter-spacing: -0.02em; }
+.brand span { color: var(--accent); }
+.tagline { color: var(--muted); font-size: 13px; margin: 6px 0 26px; }
+
+label {
+    display: block;
+    font-size: 13px;
+    font-weight: 550;
+    margin-bottom: 6px;
+    color: var(--muted);
+}
+
+input, select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 15px;
+}
+
+input:focus, select:focus, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+button {
+    width: 100%;
+    padding: 11px;
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover:not(:disabled) { filter: brightness(1.08); }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+button.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+button.inline { width: auto; padding: 8px 16px; }
+
+.message { font-size: 13px; margin-top: 14px; min-height: 18px; }
+.message.error { color: var(--bad); }
+.message.ok { color: var(--good); }
+
+/* --- App shell --------------------------------------------------------- */
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 22px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+header .who { color: var(--muted); font-size: 13px; }
+
+main { padding: 22px; max-width: 1240px; margin: 0 auto; }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 18px;
+}
+
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+}
+
+.panel h2 { margin: 0 0 4px; font-size: 16px; font-weight: 620; }
+.panel .hint { color: var(--muted); font-size: 12.5px; margin: 0 0 16px; }
+.panel.wide { grid-column: 1 / -1; }
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* --- Results ----------------------------------------------------------- */
+
+.metric {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.metric:last-child { border-bottom: 0; }
+.metric .k { color: var(--muted); font-size: 13px; }
+.metric .v { font-size: 17px; font-weight: 620; font-variant-numeric: tabular-nums; }
+
+.big { font-size: 32px; font-weight: 680; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.provenance { color: var(--muted); font-size: 12px; margin-top: 12px; line-height: 1.5; }
+
+.gauge { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin: 10px 0 4px; }
+.gauge > div { height: 100%; background: var(--accent); transition: width 0.35s ease; }
+
+/* --- Funnel bars ------------------------------------------------------- */
+
+.bar-row { display: grid; grid-template-columns: 92px 1fr 74px; align-items: center; gap: 10px; margin-bottom: 9px; }
+.bar-track { height: 22px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent); }
+.bar-fill.best { background: var(--good); }
+.bar-fill.worst { background: var(--bad); }
+.bar-label { font-size: 12.5px; color: var(--muted); }
+.bar-value { font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* --- Tables ------------------------------------------------------------ */
+
+.scroll-x { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 550; font-size: 12.5px; }
+tr.highlight td { background: color-mix(in srgb, var(--good) 12%, transparent); }
+td.excluded { color: var(--muted); }
+
+.tag { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+.tag.warn { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
+.tag.good { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+
+/* --- States ------------------------------------------------------------ */
+
+.state { color: var(--muted); font-size: 13.5px; padding: 14px 0; }
+.state.error { color: var(--bad); }
+
+.callout {
+    background: var(--surface-2);
+    border-left: 3px solid var(--warn);
+    padding: 11px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-top: 14px;
+    color: var(--muted);
+}
+
+footer { color: var(--muted); font-size: 12px; text-align: center; padding: 26px 22px 40px; }
+
+@media (max-width: 560px) {
+    .row { grid-template-columns: 1fr; }
+    main { padding: 16px; }
+}

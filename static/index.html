@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · FunnelIQ</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="brand">Funnel<span>IQ</span></div>
+    <p class="tagline">Campaign intelligence for Northbound Media. Internal tool — sign in to continue.</p>
+
+    <form id="form" novalidate>
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" required autofocus>
+
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+
+      <button id="submit" type="submit">Sign in</button>
+      <button id="signup" type="button" class="secondary" style="margin-top:10px">Create account</button>
+    </form>
+
+    <p id="message" class="message" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+<!-- supabase-js from the official CDN. Only the PUBLIC anon key is ever used
+     here; the service-role key stays on the server and is never sent to a
+     browser. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(async () => {
+  const message = document.getElementById("message");
+  const form = document.getElementById("form");
+  const submit = document.getElementById("submit");
+  const signup = document.getElementById("signup");
+
+  const say = (text, kind = "") => {
+    message.textContent = text;
+    message.className = "message " + kind;
+  };
+
+  // The browser is told its own public configuration by the server, so the anon
+  // key is never committed to the repository.
+  let client;
+  try {
+    const config = await fetch("/api/config").then((r) => r.json());
+    client = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+  } catch {
+    say("Cannot reach the server. Try again shortly.", "error");
+    submit.disabled = signup.disabled = true;
+    return;
+  }
+
+  // Already signed in? Skip the form.
+  const { data: existing } = await client.auth.getSession();
+  if (existing.session) {
+    window.location.replace("/dashboard.html");
+    return;
+  }
+
+  const credentials = () => ({
+    email: document.getElementById("email").value.trim(),
+    password: document.getElementById("password").value,
+  });
+
+  const busy = (state) => { submit.disabled = signup.disabled = state; };
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const { email, password } = credentials();
+    if (!email || !password) return say("Enter your email and password.", "error");
+
+    busy(true);
+    say("Signing in…");
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    busy(false);
+
+    if (error) return say(error.message, "error");
+    window.location.replace("/dashboard.html");
+  });
+
+  signup.addEventListener("click", async () => {
+    const { email, password } = credentials();
+    if (!email || !password) return say("Enter an email and password to register.", "error");
+
+    busy(true);
+    say("Creating account…");
+    const { data, error } = await client.auth.signUp({ email, password });
+    busy(false);
+
+    if (error) return say(error.message, "error");
+    // Supabase may require email confirmation depending on project settings, in
+    // which case there is no session yet and the user must check their inbox.
+    if (data.session) return window.location.replace("/dashboard.html");
+    say("Account created. Check your email to confirm, then sign in.", "ok");
+  });
+})();
+</script>
+</body>
+</html>
