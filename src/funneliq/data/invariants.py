@@ -187,14 +187,18 @@ INVARIANTS: list[Invariant] = [
         "no count or amount column is negative",
         _negative_values,
     ),
+    # Named for the condition the flag asserts about the ROW, not for the rule.
+    # A row tagged `cumulative_profit_missing` is missing profit -- the obvious
+    # reading. Naming these after the rule ("..._present") produced flags that
+    # meant the opposite of what they said when read off a database row.
     Invariant(
-        "ltv_months_present",
-        "ltv_months is not missing",
+        "ltv_months_missing",
+        "ltv_months is missing",
         _missing_ltv,
     ),
     Invariant(
-        "cumulative_profit_present",
-        "cumulative_profit is not missing",
+        "cumulative_profit_missing",
+        "cumulative_profit is missing",
         _missing_profit,
     ),
 ]

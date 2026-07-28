@@ -64,8 +64,8 @@ def test_clean_row_raises_no_flags() -> None:
         ("closed_split_matches_followup_5", {"closed": 6}),
         ("cac_matches_budget_per_closed", {"customer_acquisition_cost": 799}),
         ("non_negative_values", {"cumulative_profit": -1.0}),
-        ("ltv_months_present", {"ltv_months": None}),
-        ("cumulative_profit_present", {"cumulative_profit": None}),
+        ("ltv_months_missing", {"ltv_months": None}),
+        ("cumulative_profit_missing", {"cumulative_profit": None}),
     ],
 )
 def test_each_invariant_catches_its_own_breakage(

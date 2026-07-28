@@ -60,16 +60,16 @@
       "passed": true
     },
     {
-      "name": "ltv_months_present",
-      "description": "ltv_months is not missing",
+      "name": "ltv_months_missing",
+      "description": "ltv_months is missing",
       "violations": 4,
       "rows_checked": 3490,
       "pass_rate": 0.998854,
       "passed": false
     },
     {
-      "name": "cumulative_profit_present",
-      "description": "cumulative_profit is not missing",
+      "name": "cumulative_profit_missing",
+      "description": "cumulative_profit is missing",
       "violations": 29,
       "rows_checked": 3490,
       "pass_rate": 0.991691,
