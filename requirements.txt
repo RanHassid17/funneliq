@@ -5,3 +5,9 @@
 
 fastapi==0.140.7
 uvicorn[standard]==0.51.0
+
+# Data layer (Phase 1). pandas and the Supabase client are also used by the API
+# from Phase 4, so they belong in the runtime set rather than dev-only.
+pandas==3.0.5
+supabase==2.31.0
+python-dotenv==1.2.2

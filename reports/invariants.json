@@ -1,0 +1,79 @@
+{
+  "rows": 3490,
+  "rows_with_flags": 33,
+  "all_passed": false,
+  "invariants": [
+    {
+      "name": "lead_counts_sum",
+      "description": "leads_answered + leads_not_answered equals num_leads",
+      "violations": 0,
+      "rows_checked": 3490,
+      "pass_rate": 1.0,
+      "passed": true
+    },
+    {
+      "name": "followups_non_increasing",
+      "description": "each follow-up stage retains no more leads than the previous stage",
+      "violations": 0,
+      "rows_checked": 3490,
+      "pass_rate": 1.0,
+      "passed": true
+    },
+    {
+      "name": "followup_1_within_answered",
+      "description": "followup_1 does not exceed leads_answered",
+      "violations": 0,
+      "rows_checked": 3490,
+      "pass_rate": 1.0,
+      "passed": true
+    },
+    {
+      "name": "closed_split_matches_followup_5",
+      "description": "closed + not_closed equals followup_5",
+      "violations": 0,
+      "rows_checked": 3490,
+      "pass_rate": 1.0,
+      "passed": true
+    },
+    {
+      "name": "cac_matches_budget_per_closed",
+      "description": "customer_acquisition_cost equals floor(ad_budget / closed), or 0 when nothing closed",
+      "violations": 0,
+      "rows_checked": 3490,
+      "pass_rate": 1.0,
+      "passed": true
+    },
+    {
+      "name": "purchased_matches_profit_sign",
+      "description": "purchased is true exactly when cumulative_profit > 0",
+      "violations": 0,
+      "rows_checked": 3490,
+      "pass_rate": 1.0,
+      "passed": true
+    },
+    {
+      "name": "non_negative_values",
+      "description": "no count or amount column is negative",
+      "violations": 0,
+      "rows_checked": 3490,
+      "pass_rate": 1.0,
+      "passed": true
+    },
+    {
+      "name": "ltv_months_present",
+      "description": "ltv_months is not missing",
+      "violations": 4,
+      "rows_checked": 3490,
+      "pass_rate": 0.998854,
+      "passed": false
+    },
+    {
+      "name": "cumulative_profit_present",
+      "description": "cumulative_profit is not missing",
+      "violations": 29,
+      "rows_checked": 3490,
+      "pass_rate": 0.991691,
+      "passed": false
+    }
+  ]
+}

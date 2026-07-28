@@ -76,6 +76,35 @@ curl http://127.0.0.1:8000/health
 `commit` reports `RAILWAY_GIT_COMMIT_SHA` when deployed, so `/health` tells you *which revision*
 is actually serving traffic rather than making you infer it from a deploy log.
 
+## Data layer
+
+```bash
+# Profile the raw CSV -> reports/profile.json
+PYTHONPATH=src python -m funneliq.data.profile
+
+# Validate campaign invariants without touching the database
+PYTHONPATH=src python -m funneliq.data.load_to_supabase --dry-run
+
+# Load into Supabase (needs SUPABASE_SERVICE_ROLE_KEY; idempotent)
+PYTHONPATH=src python -m funneliq.data.load_to_supabase
+```
+
+Apply `sql/schema.sql` then `sql/rls_policies.sql` in the Supabase SQL editor before the first
+load. Both are idempotent.
+
+Three findings from the data change how it may be modelled, and are worth reading before touching
+the feature code — [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) has the detail:
+
+- `customer_acquisition_cost` equals `floor(ad_budget / closed)` in every row, so it silently
+  encodes the sales outcome. It is excluded from every pre-outcome model.
+- `purchased` is not "a deal closed" — it is exactly `cumulative_profit > 0`. 155 campaigns closed
+  deals and collected nothing.
+- `closed + not_closed` equals `followup_5` in every row, which settles the close-rate denominator.
+
+Assumptions that could not be settled from the data are tracked in
+[`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md); metric definitions are in
+[`docs/GLOSSARY.md`](docs/GLOSSARY.md).
+
 ## Tests and linting
 
 ```bash
