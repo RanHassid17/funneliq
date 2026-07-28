@@ -90,9 +90,11 @@ code in Phase 1 — nothing is quoted in `README.md` or `REPORT.md` until it exi
 
 ## Open blockers
 
-1. `.env` does not exist locally yet — needs `SUPABASE_SERVICE_ROLE_KEY` (the `sb_secret_…` value)
-   before the Phase 1 loader can run.
+1. **`supabase db query` is unusable** — the local CLI is a shim missing its `supabase-go`
+   backend. Schema and RLS must be applied via the dashboard SQL editor or a full CLI install.
 2. Supabase env vars are not yet set on the Railway service (needed from Phase 4).
+
+`.env` exists locally with all four Supabase values populated (verified non-empty, not read).
 
 ## Human approval gates still ahead
 
@@ -101,6 +103,12 @@ public endpoint, major architecture change.
 
 ## Next action
 
-**Phase 1 completion** — apply the SQL, load the data, verify RLS. Then Phase 2 (metrics, features, EDA).
-`src/funneliq/data/{profile,invariants,load_to_supabase}.py`, `docs/DATA_DICTIONARY.md`,
-`docs/GLOSSARY.md`, `docs/OPEN_QUESTIONS.md`, plus tests. Owner: Data & ML Engineer.
+**Finish Phase 1 against the live database:**
+
+1. Apply `sql/schema.sql`, then `sql/rls_policies.sql` (SQL editor, or the full CLI).
+2. `PYTHONPATH=src python -m funneliq.data.load_to_supabase` — expect 3,490 rows upserted.
+3. Verify the row count in Postgres, that a second run changes nothing, and that an
+   **unauthenticated** select is refused by RLS. Capture the actual error as evidence.
+
+Then **Phase 2** — `metrics.py`, `features.py` (the per-checkpoint allowlists), and Work Package 1.
+Owner: Data & ML Engineer.
