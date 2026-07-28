@@ -1,0 +1,203 @@
+{
+  "target": "ltv_months",
+  "question": "Does a tuned gradient-boosting model beat the budget-only baseline?",
+  "seed": 42,
+  "rows": 3486,
+  "features": [
+    "ad_budget",
+    "num_leads",
+    "leads_answered",
+    "answer_rate",
+    "cost_per_lead",
+    "budget_per_answered_lead",
+    "followup_1",
+    "followup_2",
+    "stage_retention_1",
+    "stage_retention_2",
+    "stage_to_stage_retention_1",
+    "stage_to_stage_retention_2",
+    "stage_dropout_1",
+    "stage_dropout_2"
+  ],
+  "baseline": {
+    "name": "baseline_budget_group_mean",
+    "metrics": {
+      "rmse": 4.707197,
+      "r2": 0.855967
+    },
+    "std": {
+      "rmse": 0.173625,
+      "r2": 0.012762
+    },
+    "folds": [
+      {
+        "rmse": 4.968983,
+        "r2": 0.838356
+      },
+      {
+        "rmse": 4.555293,
+        "r2": 0.865065
+      },
+      {
+        "rmse": 4.478965,
+        "r2": 0.874676
+      },
+      {
+        "rmse": 4.770163,
+        "r2": 0.853987
+      },
+      {
+        "rmse": 4.762579,
+        "r2": 0.847748
+      }
+    ]
+  },
+  "configs_tested": 114,
+  "configs_beating_baseline": 0,
+  "elapsed_seconds": 334.3,
+  "best": {
+    "algorithm": "xgboost",
+    "params": {
+      "learning_rate": 0.01,
+      "max_depth": 2,
+      "n_estimators": 900,
+      "subsample": 0.8
+    },
+    "r2": 0.854965,
+    "rmse": 4.7246,
+    "delta_r2_vs_baseline": -0.001001,
+    "beats_baseline": false
+  },
+  "top_10": [
+    {
+      "algorithm": "xgboost",
+      "params": {
+        "learning_rate": 0.01,
+        "max_depth": 2,
+        "n_estimators": 900,
+        "subsample": 0.8
+      },
+      "r2": 0.854965,
+      "rmse": 4.7246,
+      "delta_r2_vs_baseline": -0.001001,
+      "beats_baseline": false
+    },
+    {
+      "algorithm": "catboost",
+      "params": {
+        "learning_rate": 0.03,
+        "depth": 4,
+        "iterations": 300,
+        "l2_leaf_reg": 3.0
+      },
+      "r2": 0.854914,
+      "rmse": 4.7257,
+      "delta_r2_vs_baseline": -0.001052,
+      "beats_baseline": false
+    },
+    {
+      "algorithm": "catboost",
+      "params": {
+        "learning_rate": 0.01,
+        "depth": 4,
+        "iterations": 900,
+        "l2_leaf_reg": 3.0
+      },
+      "r2": 0.854877,
+      "rmse": 4.7264,
+      "delta_r2_vs_baseline": -0.001089,
+      "beats_baseline": false
+    },
+    {
+      "algorithm": "catboost",
+      "params": {
+        "learning_rate": 0.01,
+        "depth": 4,
+        "iterations": 900,
+        "l2_leaf_reg": 10.0
+      },
+      "r2": 0.854837,
+      "rmse": 4.727,
+      "delta_r2_vs_baseline": -0.00113,
+      "beats_baseline": false
+    },
+    {
+      "algorithm": "catboost",
+      "params": {
+        "learning_rate": 0.03,
+        "depth": 4,
+        "iterations": 300,
+        "l2_leaf_reg": 10.0
+      },
+      "r2": 0.8548,
+      "rmse": 4.7276,
+      "delta_r2_vs_baseline": -0.001167,
+      "beats_baseline": false
+    },
+    {
+      "algorithm": "catboost",
+      "params": {
+        "learning_rate": 0.01,
+        "depth": 2,
+        "iterations": 900,
+        "l2_leaf_reg": 3.0
+      },
+      "r2": 0.854684,
+      "rmse": 4.7297,
+      "delta_r2_vs_baseline": -0.001283,
+      "beats_baseline": false
+    },
+    {
+      "algorithm": "catboost",
+      "params": {
+        "learning_rate": 0.01,
+        "depth": 2,
+        "iterations": 900,
+        "l2_leaf_reg": 10.0
+      },
+      "r2": 0.854614,
+      "rmse": 4.7308,
+      "delta_r2_vs_baseline": -0.001353,
+      "beats_baseline": false
+    },
+    {
+      "algorithm": "xgboost",
+      "params": {
+        "learning_rate": 0.01,
+        "max_depth": 2,
+        "n_estimators": 900,
+        "subsample": 1.0
+      },
+      "r2": 0.854493,
+      "rmse": 4.7324,
+      "delta_r2_vs_baseline": -0.001474,
+      "beats_baseline": false
+    },
+    {
+      "algorithm": "catboost",
+      "params": {
+        "learning_rate": 0.03,
+        "depth": 2,
+        "iterations": 300,
+        "l2_leaf_reg": 3.0
+      },
+      "r2": 0.854488,
+      "rmse": 4.7328,
+      "delta_r2_vs_baseline": -0.001479,
+      "beats_baseline": false
+    },
+    {
+      "algorithm": "catboost",
+      "params": {
+        "learning_rate": 0.03,
+        "depth": 2,
+        "iterations": 900,
+        "l2_leaf_reg": 10.0
+      },
+      "r2": 0.854383,
+      "rmse": 4.7345,
+      "delta_r2_vs_baseline": -0.001583,
+      "beats_baseline": false
+    }
+  ]
+}

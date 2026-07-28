@@ -208,18 +208,39 @@ Campaign budget band is by far the strongest lever on customer longevity: campai
 and 13.2 for larger campaigns**. Northbound should move spend into that band rather than trying to
 improve follow-up execution, which the model shows has comparatively little influence on lifetime.
 
-### The honest headline: boosting loses here
+### The honest headline: boosting loses here — and tuning does not save it
 
-**No gradient-boosting model beat a budget-only group mean.** CatBoost came closest and still lost
-by 0.003 R².
+**No gradient-boosting model beat a budget-only group mean.** CatBoost came closest at default
+settings and still lost by 0.003 R².
 
-This is a real result, not a tuning failure. `ad_budget` has only 16 distinct values, and a group
-mean over 16 categories is already an extremely strong estimator of a target driven mainly by
-those categories. The funnel features add nothing beyond it. Deploying a 300-tree ensemble here
-would add latency, dependencies and opacity in exchange for slightly worse accuracy.
+The obvious objection is that the defaults were untuned, so a tuned model might win. **That was
+tested.** `reports/tuning_ltv.json` sweeps **114 configurations** across all three libraries —
+learning rates 0.01–0.1, depths 2–8, 300–900 trees, with regularisation and subsampling — each
+under the same 5-fold CV:
 
-**Recommendation: ship the baseline for LTV.** The trained CatBoost model is kept for comparison
-and reproducibility, not because it is better.
+| | |
+|---|---|
+| Configurations tested | **114** |
+| Configurations beating the baseline | **0** |
+| Best tuned model | XGBoost, R² 0.854965 (`lr 0.01, depth 2, 900 trees, subsample 0.8`) |
+| Baseline | **R² 0.855967** |
+| Gap | **−0.001** |
+
+Tuning helped — it narrowed the gap from 0.003 to 0.001 — but nothing closed it.
+
+**The shape of the winners is the tell.** Every top configuration is shallow (depth 2–4) with a
+low learning rate. The tuner's best move is to make the model *simpler*, converging toward the
+group mean from below without ever reaching it. That is what it looks like when there is no
+structure left to learn: `ad_budget` has 16 distinct values and drives the target almost entirely,
+so a mean per budget level is close to the ceiling, and the funnel features add nothing on top.
+
+**Recommendation: ship the baseline for LTV.** A 300-tree ensemble here buys latency, dependencies
+and opacity in exchange for slightly worse accuracy. The trained CatBoost model is kept for
+comparison and reproducibility, not because it is better.
+
+One caveat on generality: this is a synthetic dataset where budget was engineered to drive the
+outcome. On messier real data, boosting would more likely earn its place. The finding is about
+*this* problem, not about gradient boosting in general.
 
 ---
 

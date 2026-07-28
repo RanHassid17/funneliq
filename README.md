@@ -121,6 +121,9 @@ PYTHONPATH=src python -m funneliq.models.train
 
 # Simulate the 50,000 monthly budget -> reports/budget_simulation.json
 PYTHONPATH=src python -m funneliq.models.budget
+
+# Ask whether tuning changes the LTV verdict (~5 min) -> reports/tuning_ltv.json
+PYTHONPATH=src python -m funneliq.models.tuning
 ```
 
 Trained artifacts are committed (636 KB) with a provenance card each — features, checkpoint, seed,
