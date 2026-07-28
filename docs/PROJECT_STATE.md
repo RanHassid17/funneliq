@@ -11,7 +11,11 @@ Last updated: 2026-07-28 · after Phase 5
 
 ## Current milestone
 
-**Phases 0–5 complete** (PRs #1–#8 merged). Next: **Phase 6 — CrewAI analyst**.
+**Phases 0–5 complete** (PRs #1–#9 merged). Next: **Phase 6 — CrewAI analyst**.
+
+**The brief's definition of done is met.** A stranger can open the live URL, sign in,
+get campaign predictions, and read the funnel and budget insights unaided. Confirmed
+working in a real browser by the user on 2026-07-28.
 
 The API is live and login-gated: `/api/*` returns 401 without a valid Supabase JWT, `/api/campaigns` reads Postgres per request, and predictions are served from the committed model artifacts. Interactive docs at `/docs`.
 
@@ -63,6 +67,12 @@ is 2.5× the largest observed budget.
 `.env` holds all four Supabase values, using the **legacy JWT key scheme** (`eyJ…` anon and
 service-role keys), not the newer `sb_publishable_` / `sb_secret_` style.
 
+**Auth scheme:** this project signs user sessions with **asymmetric ES256 keys** served at
+`/auth/v1/.well-known/jwks.json`. `auth.py` verifies against JWKS and falls back to HS256
+only for projects still signing symmetrically. `SUPABASE_JWT_SECRET` is optional and unused
+here. Note the trap: the **anon key is** a legacy HS256 JWT, but it is a long-lived API key,
+not a session token -- assuming both used the same scheme broke every sign-in until PR #9.
+
 **Tooling note:** the local `supabase` CLI is a shim missing its `supabase-go` backend, so
 `supabase db query` does not work. `projects list` and `link` do. Schema changes go through the
 dashboard SQL editor.
@@ -104,7 +114,7 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | What | Evidence |
 |---|---|
 | CI green | `secret-scan` ✓, `test` ✓ on every push |
-| Local toolchain | ruff clean, ruff format clean, **110 tests pass** |
+| Local toolchain | ruff clean, ruff format clean, **117 tests pass** |
 | Live health | `HTTP 200`, `commit: 40924787…` matching `master` HEAD |
 | Push triggers redeploy | `4092478` deployed with `reason: deploy` |
 | Survives restart | forced redeploy reset uptime 206.3s → 19.7s, recovered unattended |
@@ -114,7 +124,8 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | **RLS blocks anonymous read** | `HTTP 401`, `42501 permission denied for table campaigns` |
 | **RLS blocks anonymous insert** | `HTTP 401`, same refusal |
 | Quality flags persisted | 4 rows `ltv_months_missing`, 29 `cumulative_profit_missing` |
-| Feature branches + PRs | PR #1–#8 merged |
+| Feature branches + PRs | PR #1–#9 merged |
+| **End-to-end sign-in works** | user confirmed the deployed dashboard renders every panel after login |
 | **Dashboard live** | `/` login screen, `/dashboard.html` panels, both serving on Railway |
 | **Anon key only in browser** | `/api/config` serves URL + anon key; a test asserts the service-role key can never appear there |
 | **Auth gate verified** | 10 protected routes return 401 for no/forged/expired/wrong-audience/malformed/subject-less tokens |
@@ -148,6 +159,11 @@ Destructive migrations, credential rotation, exposing a new public endpoint, maj
 change. (RLS was applied by the user directly, which cleared that gate.)
 
 ## Watch out for
+
+**Tests that mint their own tokens prove nothing about the identity provider.** Seven auth
+tests passed while every real sign-in failed, because the tests and the implementation shared
+the same wrong assumption about the signing algorithm. `tests/test_auth_asymmetric.py` now
+signs with a real EC key and verifies through a stubbed JWKS endpoint.
 
 **`/health` cannot catch a broken app.** It deliberately touches nothing external, so the
 Phase 4 deploy passed its healthcheck while crashing on every real request. **Post-deploy
