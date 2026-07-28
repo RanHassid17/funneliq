@@ -19,9 +19,7 @@ import pandas as pd
 from catboost import CatBoostClassifier
 
 from ..data.features import MODEL_CHECKPOINTS, Checkpoint, build_matrix, feature_columns
-from ..data.load_to_supabase import prepare
-from ..data.metrics import add_derived_metrics
-from ..data.profile import load_raw
+from ..data.frames import load_campaign_frame
 from . import RANDOM_SEED, REPORTS_DIR
 from .baseline import BudgetGroupMeanRegressor
 from .estimators import classifiers, feature_importances, regressors
@@ -35,11 +33,8 @@ from .evaluate import (
 )
 from .registry import ModelCard, save
 
-
-def load_frame() -> pd.DataFrame:
-    """De-duplicated campaigns with derived metrics attached."""
-    prepared, _ = prepare(load_raw())
-    return add_derived_metrics(prepared)
+#: Kept as an alias so existing callers and scripts keep working.
+load_frame = load_campaign_frame
 
 
 def _drop_missing_target(df: pd.DataFrame, target: str) -> pd.DataFrame:

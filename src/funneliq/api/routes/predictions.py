@@ -13,9 +13,9 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from ...data.frames import load_campaign_frame
 from ...models import REPORTS_DIR
 from ...models.budget import recommend, simulate
-from ...models.train import load_frame
 from ..auth import User, current_user
 from ..predictors import (
     ModelUnavailable,
@@ -88,7 +88,7 @@ def budget_simulate(
     """
     try:
         scenarios = simulate(
-            load_frame(),
+            load_campaign_frame(),
             monthly_budget=request.monthly_budget,
             splits=tuple(request.splits),
         )
