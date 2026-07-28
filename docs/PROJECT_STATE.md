@@ -5,13 +5,13 @@ able to read this file plus `PLAN.md` and resume without redoing discovery.
 
 **Never put secrets in this file.** Keys live in `.env` (gitignored) and in Railway variables.
 
-Last updated: 2026-07-28 · after Phase 3
+Last updated: 2026-07-28 · after Phase 3 + tuning follow-up (PR #5)
 
 ---
 
 ## Current milestone
 
-**Phases 0–3 complete** (PRs #1–#4 merged). Next: **Phase 4 — API + auth**.
+**Phases 0–3 complete** (PRs #1–#5 merged). Next: **Phase 4 — API + auth**.
 
 All six analytical work packages are answered in `REPORT.md`. Four models are trained, evaluated
 against naive baselines, and committed with provenance cards.
@@ -31,6 +31,12 @@ hidden:
 `ad_budget` has only 16 distinct values and drives the regression targets almost entirely, so a
 group mean over those categories is already near-optimal. **Phase 4 should serve the baseline for
 LTV and profit**, keeping the ensembles only for comparison. See `docs/MODEL_CARDS.md`.
+
+**This was challenged and held.** PR #5 swept **114 tuned configurations** across all three
+libraries (`reports/tuning_ltv.json`); **zero** beat the baseline. Best was XGBoost at R² 0.854965
+versus 0.855967. Every top config was shallow with a low learning rate — the tuner's best move is
+to make the model simpler, converging toward the group mean without reaching it. A test asserts
+this, so if it ever stops holding, CI fails and the write-up gets corrected.
 
 **Leakage smoke test:** LTV R² 0.853 → **0.946** when the forbidden post-campaign columns are
 added. That is the measured cost of a leak.
@@ -96,7 +102,7 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | What | Evidence |
 |---|---|
 | CI green | `secret-scan` ✓, `test` ✓ on every push |
-| Local toolchain | ruff clean, ruff format clean, **83 tests pass** |
+| Local toolchain | ruff clean, ruff format clean, **84 tests pass** |
 | Live health | `HTTP 200`, `commit: 40924787…` matching `master` HEAD |
 | Push triggers redeploy | `4092478` deployed with `reason: deploy` |
 | Survives restart | forced redeploy reset uptime 206.3s → 19.7s, recovered unattended |
@@ -106,7 +112,7 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | **RLS blocks anonymous read** | `HTTP 401`, `42501 permission denied for table campaigns` |
 | **RLS blocks anonymous insert** | `HTTP 401`, same refusal |
 | Quality flags persisted | 4 rows `ltv_months_missing`, 29 `cumulative_profit_missing` |
-| Feature branches + PRs | PR #1–#4 merged |
+| Feature branches + PRs | PR #1–#5 merged |
 | Models trained with provenance | 4 cards in `models/*.json`; a test asserts each still matches the current feature policy |
 | Leakage cost measured | LTV R² 0.853 → 0.946 with forbidden columns |
 | Leakage policy enforced | `test_features.py` asserts CAC and `purchased` cannot reach any pre-outcome model |
@@ -120,8 +126,8 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 `src/funneliq/api/main.py` · `src/funneliq/data/{__init__,invariants,profile,load_to_supabase}.py` ·
 `src/funneliq/data/{metrics,features}.py` · `tests/{test_health,test_invariants,test_metrics,test_features,helpers}.py` ·
 `docs/{DATA_DICTIONARY,GLOSSARY,OPEN_QUESTIONS,PROJECT_STATE}.md` ·
-`src/funneliq/models/{__init__,evaluate,registry,estimators,train,budget}.py` · `tests/test_models.py` ·
-`models/*.{pkl,json}` · `reports/{profile,invariants,models,budget_simulation}.json` ·
+`src/funneliq/models/{__init__,evaluate,registry,estimators,train,budget,tuning}.py` · `tests/test_models.py` ·
+`models/*.{pkl,json}` · `reports/{profile,invariants,models,budget_simulation,tuning_ltv}.json` ·
 `docs/MODEL_CARDS.md` · `data/funnel_marketing_data.csv` · `REPORT.md`
 
 ## Open blockers
