@@ -43,5 +43,5 @@
     "Accuracy alone is misleading here -- the majority baseline scores well on it while achieving zero recall on the positive class."
   ],
   "seed": 42,
-  "git_sha": "81666e6d098fb454845fc177ef2f5d6293b78767"
+  "git_sha": "b8b60ce36170b2d75986558349cd990d6809f5c2"
 }

@@ -22,3 +22,16 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection idiom puts Depends()/Query() in argument
+# defaults by design. B008 flags that as a mutable default; here it is the
+# framework's documented interface, so the calls are declared immutable rather
+# than the routes rewritten around the linter.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+]

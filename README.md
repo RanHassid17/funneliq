@@ -113,6 +113,33 @@ Assumptions that could not be settled from the data are tracked in
 [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md); metric definitions are in
 [`docs/GLOSSARY.md`](docs/GLOSSARY.md).
 
+## API
+
+| Route | Auth | Purpose |
+|---|---|---|
+| `GET /health` | public | Liveness. Never touches Supabase |
+| `GET /ready` | public | Readiness: config, database reachability, model artifacts |
+| `GET /api/campaigns` | **session** | Campaigns read **live from Supabase** |
+| `GET /api/campaigns/{id}` | **session** | One campaign with derived metrics |
+| `GET /api/campaigns/compare?a=&b=` | **session** | Two campaigns side by side, with deltas |
+| `POST /api/predict/ltv` | **session** | Package 2 — average customer lifetime |
+| `POST /api/predict/upsell` | **session** | Package 3 — upsell likelihood |
+| `POST /api/predict/referral-score` | **session** | Package 4 — 0–100 campaign score |
+| `POST /api/predict/profit` | **session** | Package 6 — pre-launch profit |
+| `POST /api/budget/simulate` | **session** | Package 6 — allocation strategies |
+| `GET /api/funnel/dropout` | **session** | Package 5 — stage dropout + recommendation |
+| `GET /api/models` | **session** | What is served, with each model's baseline comparison |
+
+Every protected route returns **401** without a valid Supabase JWT. Interactive docs at `/docs`.
+
+**`/health` and `/ready` are deliberately different.** Liveness must not depend on the database —
+a health check that fails during a brief Supabase blip makes the platform restart a process that
+was never broken. Readiness *does* check it, and reports each dependency separately, because "the
+database is unreachable" and "the models were never trained" need different fixes.
+
+**The LTV and profit endpoints serve the budget baseline, not the ensembles** — the honest
+consequence of boosting failing to beat it. Each response names the model that answered it.
+
 ## Models
 
 ```bash

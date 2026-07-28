@@ -1,15 +1,15 @@
 {
-  "name": "cumulative_profit",
+  "name": "cumulative_profit_baseline",
   "target": "cumulative_profit",
   "checkpoint": "C0",
   "features": [
     "ad_budget"
   ],
   "rows_trained": 3461,
-  "algorithm": "catboost",
+  "algorithm": "budget_group_mean",
   "metrics": {
-    "rmse": 6632.787933650105,
-    "r2": 0.6488348614217265
+    "rmse": 6633.234650317878,
+    "r2": 0.6487863215595875
   },
   "baseline_name": "baseline_budget_group_mean",
   "baseline_metrics": {
@@ -17,12 +17,13 @@
     "r2": 0.6487863215595875
   },
   "improvement": {
-    "r2": 4.9e-05,
-    "rmse": -0.446717
+    "rmse": 0.0,
+    "r2": 0.0
   },
   "notes": [
-    "Package 6 - campaign profit, pre-launch. Campaign-level target, never an individual customer's.",
-    "Rows missing this target are dropped, never imputed."
+    "THIS is the model served in production for this target.",
+    "Gradient boosting did not beat it: see reports/tuning_ltv.json.",
+    "Predicts the mean outcome of campaigns sharing the same ad_budget."
   ],
   "seed": 42,
   "git_sha": "b8b60ce36170b2d75986558349cd990d6809f5c2"

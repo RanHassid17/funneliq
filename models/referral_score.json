@@ -35,5 +35,5 @@
     "Trained at checkpoint C1 (after lead response) because the brief asks for a score from early funnel data."
   ],
   "seed": 42,
-  "git_sha": "81666e6d098fb454845fc177ef2f5d6293b78767"
+  "git_sha": "b8b60ce36170b2d75986558349cd990d6809f5c2"
 }
