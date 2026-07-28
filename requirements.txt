@@ -11,3 +11,10 @@ uvicorn[standard]==0.51.0
 pandas==3.0.5
 supabase==2.31.0
 python-dotenv==1.2.2
+
+# Modelling (Phase 3). Loaded by the API from Phase 4 to serve predictions.
+scikit-learn==1.9.0
+xgboost==3.3.0
+lightgbm==4.7.0
+catboost==1.2.10
+joblib==1.5.3

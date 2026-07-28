@@ -53,6 +53,14 @@ committed or if client code references the service-role key.
 
 Requires Python 3.11+.
 
+**macOS users: install OpenMP first.** XGBoost and LightGBM ship native libraries that link
+against it, and macOS does not provide one — without this they fail at import with an opaque
+`Library not loaded: @rpath/libomp.dylib`:
+
+```bash
+brew install libomp
+```
+
 ```bash
 git clone https://github.com/RanHassid17/funneliq.git
 cd funneliq
@@ -104,6 +112,25 @@ the feature code — [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) has th
 Assumptions that could not be settled from the data are tracked in
 [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md); metric definitions are in
 [`docs/GLOSSARY.md`](docs/GLOSSARY.md).
+
+## Models
+
+```bash
+# Train all four models, run the leakage smoke test -> reports/models.json, models/*
+PYTHONPATH=src python -m funneliq.models.train
+
+# Simulate the 50,000 monthly budget -> reports/budget_simulation.json
+PYTHONPATH=src python -m funneliq.models.budget
+```
+
+Trained artifacts are committed (636 KB) with a provenance card each — features, checkpoint, seed,
+git SHA, row count, metrics and baseline comparison. A test asserts every committed card still
+matches the current feature policy, so a policy change cannot silently leave a stale leaky model
+in place.
+
+**Two of the four models do not beat their naive baseline**, and
+[`docs/MODEL_CARDS.md`](docs/MODEL_CARDS.md) says so per model rather than quoting the flattering
+number. Findings and business recommendations are in [`REPORT.md`](REPORT.md).
 
 ## Tests and linting
 

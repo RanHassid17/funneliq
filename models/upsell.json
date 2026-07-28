@@ -1,0 +1,47 @@
+{
+  "name": "upsell",
+  "target": "upsell",
+  "checkpoint": "C2",
+  "features": [
+    "ad_budget",
+    "num_leads",
+    "leads_answered",
+    "answer_rate",
+    "cost_per_lead",
+    "budget_per_answered_lead",
+    "followup_1",
+    "followup_2",
+    "stage_retention_1",
+    "stage_retention_2",
+    "stage_to_stage_retention_1",
+    "stage_to_stage_retention_2",
+    "stage_dropout_1",
+    "stage_dropout_2"
+  ],
+  "rows_trained": 3490,
+  "algorithm": "catboost",
+  "metrics": {
+    "accuracy": 0.7303724928366762,
+    "precision": 0.6533039388641795,
+    "recall": 0.7639757609528453,
+    "f1": 0.7039417796546803
+  },
+  "baseline_name": "baseline_majority_class",
+  "baseline_metrics": {
+    "accuracy": 0.579942693409742,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0
+  },
+  "improvement": {
+    "f1": 0.703942,
+    "accuracy": 0.15043
+  },
+  "notes": [
+    "Package 3 - campaign upsell. Campaign-level outcome, not an individual's behaviour.",
+    "Class imbalance handled per library; both targets are only mildly imbalanced.",
+    "Accuracy alone is misleading here -- the majority baseline scores well on it while achieving zero recall on the positive class."
+  ],
+  "seed": 42,
+  "git_sha": "81666e6d098fb454845fc177ef2f5d6293b78767"
+}

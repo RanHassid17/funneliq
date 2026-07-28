@@ -1,0 +1,29 @@
+{
+  "name": "cumulative_profit",
+  "target": "cumulative_profit",
+  "checkpoint": "C0",
+  "features": [
+    "ad_budget"
+  ],
+  "rows_trained": 3461,
+  "algorithm": "catboost",
+  "metrics": {
+    "rmse": 6632.787933650105,
+    "r2": 0.6488348614217265
+  },
+  "baseline_name": "baseline_budget_group_mean",
+  "baseline_metrics": {
+    "rmse": 6633.234650317878,
+    "r2": 0.6487863215595875
+  },
+  "improvement": {
+    "r2": 4.9e-05,
+    "rmse": -0.446717
+  },
+  "notes": [
+    "Package 6 - campaign profit, pre-launch. Campaign-level target, never an individual customer's.",
+    "Rows missing this target are dropped, never imputed."
+  ],
+  "seed": 42,
+  "git_sha": "81666e6d098fb454845fc177ef2f5d6293b78767"
+}

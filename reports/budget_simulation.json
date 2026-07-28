@@ -1,0 +1,86 @@
+{
+  "monthly_budget": 50000.0,
+  "recommended": {
+    "label": "25 x 2,000",
+    "campaigns": 25,
+    "budget_per_campaign": 2000.0,
+    "predicted_profit_per_campaign": 21740.76,
+    "predicted_total_profit": 543519.06,
+    "return_on_ad_spend": 10.8704,
+    "in_distribution": true
+  },
+  "scenarios": [
+    {
+      "label": "1 x 50,000",
+      "campaigns": 1,
+      "budget_per_campaign": 50000.0,
+      "predicted_profit_per_campaign": 4776.16,
+      "predicted_total_profit": 4776.16,
+      "return_on_ad_spend": 0.0955,
+      "in_distribution": false
+    },
+    {
+      "label": "3 x 16,667",
+      "campaigns": 3,
+      "budget_per_campaign": 16666.67,
+      "predicted_profit_per_campaign": 5222.28,
+      "predicted_total_profit": 15666.84,
+      "return_on_ad_spend": 0.3133,
+      "in_distribution": true
+    },
+    {
+      "label": "5 x 10,000",
+      "campaigns": 5,
+      "budget_per_campaign": 10000.0,
+      "predicted_profit_per_campaign": 5117.58,
+      "predicted_total_profit": 25587.91,
+      "return_on_ad_spend": 0.5118,
+      "in_distribution": true
+    },
+    {
+      "label": "10 x 5,000",
+      "campaigns": 10,
+      "budget_per_campaign": 5000.0,
+      "predicted_profit_per_campaign": 21698.43,
+      "predicted_total_profit": 216984.26,
+      "return_on_ad_spend": 4.3397,
+      "in_distribution": true
+    },
+    {
+      "label": "17 x 2,941",
+      "campaigns": 17,
+      "budget_per_campaign": 2941.18,
+      "predicted_profit_per_campaign": 21970.65,
+      "predicted_total_profit": 373501.0,
+      "return_on_ad_spend": 7.47,
+      "in_distribution": true
+    },
+    {
+      "label": "25 x 2,000",
+      "campaigns": 25,
+      "budget_per_campaign": 2000.0,
+      "predicted_profit_per_campaign": 21740.76,
+      "predicted_total_profit": 543519.06,
+      "return_on_ad_spend": 10.8704,
+      "in_distribution": true
+    },
+    {
+      "label": "33 x 1,515",
+      "campaigns": 33,
+      "budget_per_campaign": 1515.15,
+      "predicted_profit_per_campaign": 3321.47,
+      "predicted_total_profit": 109608.67,
+      "return_on_ad_spend": 2.1922,
+      "in_distribution": true
+    }
+  ],
+  "excluded_as_extrapolation": [
+    "1 x 50,000"
+  ],
+  "caveats": [
+    "ad_budget in training data spans 500-20,000 across 16 discrete values. Scenarios outside that range are flagged and excluded from the recommendation.",
+    "The pre-launch model uses ad_budget alone, so this simulates the average campaign at each budget level, not a specific campaign.",
+    "Assumes cumulative_profit is gross of ad spend (docs/OPEN_QUESTIONS.md Q6). If it is net, the ROAS figures are overstated.",
+    "The mid-budget advantage may be an artefact of how this dataset was generated. Validate with a controlled split before committing real spend."
+  ]
+}
