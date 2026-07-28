@@ -5,13 +5,15 @@ able to read this file plus `PLAN.md` and resume without redoing discovery.
 
 **Never put secrets in this file.** Keys live in `.env` (gitignored) and in Railway variables.
 
-Last updated: 2026-07-28 · after Phase 3 + tuning follow-up (PR #5)
+Last updated: 2026-07-28 · after Phase 4
 
 ---
 
 ## Current milestone
 
-**Phases 0–3 complete** (PRs #1–#5 merged). Next: **Phase 4 — API + auth**.
+**Phases 0–4 complete** (PRs #1–#7 merged). Next: **Phase 5 — dashboard**.
+
+The API is live and login-gated: `/api/*` returns 401 without a valid Supabase JWT, `/api/campaigns` reads Postgres per request, and predictions are served from the committed model artifacts. Interactive docs at `/docs`.
 
 All six analytical work packages are answered in `REPORT.md`. Four models are trained, evaluated
 against naive baselines, and committed with provenance cards.
@@ -102,7 +104,7 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | What | Evidence |
 |---|---|
 | CI green | `secret-scan` ✓, `test` ✓ on every push |
-| Local toolchain | ruff clean, ruff format clean, **84 tests pass** |
+| Local toolchain | ruff clean, ruff format clean, **107 tests pass** |
 | Live health | `HTTP 200`, `commit: 40924787…` matching `master` HEAD |
 | Push triggers redeploy | `4092478` deployed with `reason: deploy` |
 | Survives restart | forced redeploy reset uptime 206.3s → 19.7s, recovered unattended |
@@ -112,7 +114,10 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | **RLS blocks anonymous read** | `HTTP 401`, `42501 permission denied for table campaigns` |
 | **RLS blocks anonymous insert** | `HTTP 401`, same refusal |
 | Quality flags persisted | 4 rows `ltv_months_missing`, 29 `cumulative_profit_missing` |
-| Feature branches + PRs | PR #1–#5 merged |
+| Feature branches + PRs | PR #1–#7 merged |
+| **Auth gate verified** | 10 protected routes return 401 for no/forged/expired/wrong-audience/malformed/subject-less tokens |
+| **Live runtime Supabase read** | `/ready` on the deployed service reports 3,490 campaigns reachable |
+| Deployed predictions work | live `/api/predict/referral-score` returns 75.0, matching local |
 | Models trained with provenance | 4 cards in `models/*.json`; a test asserts each still matches the current feature policy |
 | Leakage cost measured | LTV R² 0.853 → 0.946 with forbidden columns |
 | Leakage policy enforced | `test_features.py` asserts CAC and `purchased` cannot reach any pre-outcome model |
@@ -132,7 +137,6 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 
 ## Open blockers
 
-1. Supabase env vars are not yet set on the Railway service (needed from Phase 4).
 2. `ANTHROPIC_API_KEY` is unset — only affects the Phase 6 CrewAI analyst, which degrades to a
    503 with a clear message rather than crashing.
 
@@ -142,6 +146,15 @@ Destructive migrations, credential rotation, exposing a new public endpoint, maj
 change. (RLS was applied by the user directly, which cleared that gate.)
 
 ## Watch out for
+
+**`/health` cannot catch a broken app.** It deliberately touches nothing external, so the
+Phase 4 deploy passed its healthcheck while crashing on every real request. **Post-deploy
+verification must hit `/ready`**, which checks Supabase and the model artifacts.
+
+**Never import `models.train` from the API.** It pulls in LightGBM and XGBoost, whose native
+libraries need OpenMP at import time. Use `data.frames.load_campaign_frame`. CatBoost still
+needs OpenMP to unpickle, which is why the Railway service sets
+`RAILPACK_DEPLOY_APT_PACKAGES=libgomp1`.
 
 **macOS needs `brew install libomp`** before XGBoost or LightGBM will import; without it they
 fail with an opaque `Library not loaded: @rpath/libomp.dylib`.
