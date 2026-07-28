@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Format check
+        run: ruff format --check .
+
+      - name: Test
+        run: pytest -q
+
+  secret-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # The brief's central security property is anon key in the browser,
+      # service-role key on the server only. A JWT-shaped string in a tracked
+      # file almost always means a real key escaped into source control, so we
+      # fail the build rather than trusting review to catch it.
+      - name: Fail on committed JWT-shaped secrets
+        run: |
+          if git grep -nIE 'eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}' -- . ':!.github/workflows/ci.yml'; then
+            echo "::error::A JWT-shaped string is committed. Rotate the key and remove it from history."
+            exit 1
+          fi
+          echo "No JWT-shaped secrets found."
+
+      # static/ does not exist until Phase 5. Guarding on its presence keeps
+      # this check honest now and enforcing later, instead of silently passing.
+      - name: Fail if the service-role key is referenced client-side
+        run: |
+          if [ -d static ] && git grep -nI 'SERVICE_ROLE\|service_role' -- static; then
+            echo "::error::static/ references the service-role key. It must stay server-side."
+            exit 1
+          fi
+          echo "No service-role reference in client code."
