@@ -5,14 +5,17 @@ able to read this file plus `PLAN.md` and resume without redoing discovery.
 
 **Never put secrets in this file.** Keys live in `.env` (gitignored) and in Railway variables.
 
-Last updated: 2026-07-28 · after Phase 1
+Last updated: 2026-07-28 · after Phase 2
 
 ---
 
 ## Current milestone
 
-**Phases 0 and 1 complete and verified against live infrastructure.** In progress: Phase 2
-(derived metrics, per-checkpoint feature policy, Work Package 1).
+**Phases 0, 1 and 2 complete** (PRs #1, #2, #3 merged). Next: **Phase 3 — models**.
+
+Phase 2 delivered `metrics.py` (derived campaign metrics, NaN on zero denominators),
+`features.py` (per-checkpoint leakage allowlists with enforcement tests), and `REPORT.md` with
+Work Package 1 answered.
 
 ## Live infrastructure
 
@@ -72,7 +75,7 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | What | Evidence |
 |---|---|
 | CI green | `secret-scan` ✓, `test` ✓ on every push |
-| Local toolchain | ruff clean, ruff format clean, **26 tests pass** |
+| Local toolchain | ruff clean, ruff format clean, **65 tests pass** |
 | Live health | `HTTP 200`, `commit: 40924787…` matching `master` HEAD |
 | Push triggers redeploy | `4092478` deployed with `reason: deploy` |
 | Survives restart | forced redeploy reset uptime 206.3s → 19.7s, recovered unattended |
@@ -82,7 +85,9 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | **RLS blocks anonymous read** | `HTTP 401`, `42501 permission denied for table campaigns` |
 | **RLS blocks anonymous insert** | `HTTP 401`, same refusal |
 | Quality flags persisted | 4 rows `ltv_months_missing`, 29 `cumulative_profit_missing` |
-| Feature branches + PRs | PR #1, PR #2 merged |
+| Feature branches + PRs | PR #1, PR #2, PR #3 merged |
+| Leakage policy enforced | `test_features.py` asserts CAC and `purchased` cannot reach any pre-outcome model |
+| No infinities in derived metrics | `test_metrics.py` checks all 24 derived columns on all 3,500 rows |
 
 ## Artifacts
 
@@ -90,9 +95,9 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 `Procfile` · `railway.json` · `.env.example` · `.github/workflows/ci.yml` ·
 `sql/schema.sql` · `sql/rls_policies.sql` ·
 `src/funneliq/api/main.py` · `src/funneliq/data/{__init__,invariants,profile,load_to_supabase}.py` ·
-`tests/{test_health,test_invariants}.py` ·
+`src/funneliq/data/{metrics,features}.py` · `tests/{test_health,test_invariants,test_metrics,test_features,helpers}.py` ·
 `docs/{DATA_DICTIONARY,GLOSSARY,OPEN_QUESTIONS,PROJECT_STATE}.md` ·
-`reports/{profile,invariants}.json` · `data/funnel_marketing_data.csv`
+`reports/{profile,invariants}.json` · `data/funnel_marketing_data.csv` · `REPORT.md`
 
 ## Open blockers
 
@@ -113,12 +118,24 @@ the test run — pytest collected stale copies alongside the real modules. They 
 
 ## Next action
 
-**Phase 2** on branch `feat/eda`:
+**Phase 3 — models**, on branch `feat/models`. Per `PLAN.md` §8:
 
-1. `src/funneliq/data/metrics.py` — derived campaign metrics per `PLAN.md` §6.3, every ratio
-   declaring its denominator and returning `None` on a zero denominator.
-2. `src/funneliq/data/features.py` — the per-checkpoint allowlists from `PLAN.md` §7, with a test
-   asserting no excluded column can reach any feature matrix.
-3. Work Package 1 write-up from `reports/profile.json`.
+| Package | Target | Checkpoint | Must beat |
+|---|---|---|---|
+| 2 | `ltv_months` | C2 | R² 0.856 (budget-only) |
+| 3 | `upsell` | C2 | 58.1% majority class |
+| 4 | `referred` → 0–100 score | C1 | 61.3% majority class |
+| 6 | `cumulative_profit` | C0 | R² 0.664 (budget-only) |
+
+Requirements: XGBoost + LightGBM + CatBoost for Packages 2 and 3; 5-fold CV (stratified for
+classification); RMSE/R² for regression, Accuracy/Precision/Recall/F1 for classification;
+imbalance handling on `upsell`; CatBoost hyperparameter search for Package 4.
+
+Also in Phase 3: `registry.py` (seed, git SHA, feature list, checkpoint serialised beside every
+`.pkl`), a model card per model, the CAC leakage smoke test, and the Package 6 simulator with its
+`in_distribution` flag — ₪50,000 in one campaign is 2.5× the observed maximum and must not be
+headlined.
+
+Add to `requirements.txt` when Phase 3 starts: `xgboost`, `lightgbm`, `catboost`, `scikit-learn`.
 
 Owner: Data & ML Engineer.
