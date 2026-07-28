@@ -5,11 +5,16 @@ FunnelIQ turns two years of funnel data into decision-ready answers: which campa
 long-lived customers, where leads fall out of the follow-up sequence, and how to allocate a
 ₪50,000 monthly ad budget.
 
-**Live URL:** _not deployed yet — added when Phase 0 completes._
+**Live URL:** <https://funneliq-api-production.up.railway.app>
+· health check: [`/health`](https://funneliq-api-production.up.railway.app/health)
 
-> **Build status: Phase 0 of 8.** The skeleton and its CI pipeline are in place. Data, models,
-> auth and the dashboard land in later phases. [`PLAN.md`](PLAN.md) is the full roadmap and the
-> record of every decision behind it.
+> **Build status: Phase 0 of 8 complete.** The skeleton is deployed on Railway with CI green.
+> Data, models, auth and the dashboard land in later phases. [`PLAN.md`](PLAN.md) is the full
+> roadmap and the record of every decision behind it.
+>
+> Railway deploys from GitHub `master`, so every merge redeploys automatically. The service runs
+> on a free trial plan and may cold-start after a period of inactivity — the first request can
+> take a few seconds.
 
 ---
 
