@@ -5,13 +5,26 @@ able to read this file plus `PLAN.md` and resume without redoing discovery.
 
 **Never put secrets in this file.** Keys live in `.env` (gitignored) and in Railway variables.
 
-Last updated: 2026-07-28 · after Phase 0
+Last updated: 2026-07-28 · after Phase 1 code merge
 
 ---
 
 ## Current milestone
 
-**Phase 0 complete.** Next: Phase 1 (data contract).
+**Phase 1 code complete and merged** (PR #2). **Not yet applied to Supabase.**
+
+Remaining before Phase 2: apply `sql/schema.sql` then `sql/rls_policies.sql` to the Supabase
+project, run the loader, and verify RLS refuses an unauthenticated read.
+
+**Blocker:** the local `supabase` CLI is a shim whose `supabase-go` backend is not installed, so
+`supabase db query` fails. `supabase projects list` and `supabase link` work (they are implemented
+in the shim). Either install the full CLI —
+
+```bash
+brew install supabase/tap/supabase
+```
+
+— or paste the two SQL files into the Supabase dashboard SQL editor. Both files are idempotent.
 
 ## Live infrastructure
 
@@ -88,6 +101,6 @@ public endpoint, major architecture change.
 
 ## Next action
 
-**Phase 1 — data contract.** `sql/schema.sql`, `sql/rls_policies.sql`,
+**Phase 1 completion** — apply the SQL, load the data, verify RLS. Then Phase 2 (metrics, features, EDA).
 `src/funneliq/data/{profile,invariants,load_to_supabase}.py`, `docs/DATA_DICTIONARY.md`,
 `docs/GLOSSARY.md`, `docs/OPEN_QUESTIONS.md`, plus tests. Owner: Data & ML Engineer.
