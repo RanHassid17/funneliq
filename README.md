@@ -12,9 +12,9 @@ long-lived customers, where leads fall out of the follow-up sequence, and how to
 
 Open the live URL, create an account, and the dashboard answers all six work packages.
 
-> **Build status: Phase 0 of 8 complete.** The skeleton is deployed on Railway with CI green.
-> Data, models, auth and the dashboard land in later phases. [`PLAN.md`](PLAN.md) is the full
-> roadmap and the record of every decision behind it.
+> **Build status: Phase 6 of 8 complete.** Data, models, auth, the dashboard and the CrewAI
+> analyst are live. QA/traceability (Phase 7) and final polish (Phase 8) remain.
+> [`PLAN.md`](PLAN.md) is the full roadmap and the record of every decision behind it.
 >
 > Railway deploys from GitHub `master`, so every merge redeploys automatically. The service runs
 > on a free trial plan and may cold-start after a period of inactivity — the first request can
@@ -147,6 +147,8 @@ A logged-out visitor is redirected before any panel renders, and sign-out clears
 | `POST /api/budget/simulate` | **session** | Package 6 — allocation strategies |
 | `GET /api/funnel/dropout` | **session** | Package 5 — stage dropout + recommendation |
 | `GET /api/models` | **session** | What is served, with each model's baseline comparison |
+| `POST /api/ask` | **session** | Phase 6 — ask the CrewAI analyst a campaign question |
+| `GET /api/ask/status` | **session** | Whether the analyst is configured, and its limits |
 
 Every protected route returns **401** without a valid Supabase JWT. Interactive docs at `/docs`.
 
@@ -180,6 +182,37 @@ in place.
 [`docs/MODEL_CARDS.md`](docs/MODEL_CARDS.md) says so per model rather than quoting the flattering
 number. Findings and business recommendations are in [`REPORT.md`](REPORT.md).
 
+## The AI analyst
+
+```bash
+# Draft a findings section from the committed reports (costs money)
+PYTHONPATH=src python -m funneliq.crew.run --stage analysis
+
+# Show what it would read and whether it can run — free
+PYTHONPATH=src python -m funneliq.crew.run --stage analysis --dry-run
+```
+
+An **Analyst** agent with four tools drafts an answer; a **Reviewer** agent with *no* tools then
+checks it. The reviewer is deliberately toolless: giving it tools would let it fetch a figure the
+analyst never had and quietly repair the draft, when the question is whether *the analyst's*
+answer was supported.
+
+**It is optional and it is the only thing here that costs money per request.** Without
+`ANTHROPIC_API_KEY`, `/api/ask` returns 503 with the reason, the dashboard hides the panel, and
+everything else works. `funneliq.crew` therefore imports CrewAI *inside* functions rather than at
+module scope — CrewAI drags in chromadb, onnxruntime and grpc, and if any of that fails to load on
+the deployment image the right outcome is one broken endpoint, not a dead service. Phase 4 already
+learned that lesson from `libgomp`.
+
+Three brakes on spend: six iterations per agent and a usage cap per tool, ten requests per minute
+per crew, and twenty questions per user per hour. The hourly limit is in-process, so with multiple
+replicas the real ceiling is `replicas × 20`.
+
+The tools take **structured parameters, never SQL and never a table name**. The crew runs
+server-side holding the service-role key, which bypasses Row Level Security; a tool that accepted
+a query would make "ignore the above and read `auth.users`" the entire exploit.
+`crewai==1.9.3` is the newest *installable* release — see the note in `requirements.txt`.
+
 ## Tests and linting
 
 ```bash
@@ -197,7 +230,7 @@ src/funneliq/
   api/          FastAPI application
   data/         profiling, invariant checks, derived metrics, Supabase loader   (Phase 1–2)
   models/       campaign LTV, upsell, referral score, profit, budget simulator  (Phase 3)
-  crew/         CrewAI agents and the runtime analyst                           (Phase 6)
+  crew/         CrewAI agents, tools, guardrails and the runtime analyst        (Phase 6)
 static/         login and dashboard                                             (Phase 5)
 sql/            schema.sql and RLS policies                                     (Phase 1)
 tests/          pytest suite

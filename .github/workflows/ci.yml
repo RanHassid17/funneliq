@@ -48,6 +48,16 @@ jobs:
           fi
           echo "No JWT-shaped secrets found."
 
+      # Phase 6 added a second kind of credential. An Anthropic key is not
+      # JWT-shaped, so the check above would not have caught it.
+      - name: Fail on committed Anthropic API keys
+        run: |
+          if git grep -nIE 'sk-ant-[A-Za-z0-9_-]{20,}' -- . ':!.github/workflows/ci.yml'; then
+            echo "::error::An Anthropic API key is committed. Rotate it and remove it from history."
+            exit 1
+          fi
+          echo "No Anthropic keys found."
+
       # static/ does not exist until Phase 5. Guarding on its presence keeps
       # this check honest now and enforcing later, instead of silently passing.
       - name: Fail if the service-role key is referenced client-side
