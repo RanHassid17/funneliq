@@ -169,9 +169,7 @@ if STATIC_DIR.is_dir():
     @app.get("/", include_in_schema=False)
     def login_page() -> FileResponse:
         """The login screen. An unauthenticated visitor sees only this."""
-        return FileResponse(
-            STATIC_DIR / "index.html", headers={"cache-control": "no-cache"}
-        )
+        return FileResponse(STATIC_DIR / "index.html", headers={"cache-control": "no-cache"})
 
     @app.get("/dashboard.html", include_in_schema=False)
     def dashboard_page() -> FileResponse:
@@ -181,6 +179,4 @@ if STATIC_DIR.is_dir():
         requires a verified session, and app.js redirects to the login screen
         before rendering if there is no session.
         """
-        return FileResponse(
-            STATIC_DIR / "dashboard.html", headers={"cache-control": "no-cache"}
-        )
+        return FileResponse(STATIC_DIR / "dashboard.html", headers={"cache-control": "no-cache"})
