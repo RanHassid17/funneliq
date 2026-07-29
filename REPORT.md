@@ -7,8 +7,8 @@ be read as a statement about an individual client.
 Every figure is traceable to a committed file in `reports/`. Nothing is quoted that a reader
 cannot regenerate with `PYTHONPATH=src python -m funneliq.data.profile`.
 
-Status: **Packages 1–6 complete.** Sources: `reports/profile.json`, `reports/invariants.json`,
-`reports/models.json`, `reports/budget_simulation.json`.
+Status: **Packages 1–7 complete.** Sources: `reports/profile.json`, `reports/invariants.json`,
+`reports/models.json`, `reports/budget_simulation.json`, `reports/tuning_ltv.json`.
 
 ## The one-paragraph summary
 
@@ -133,8 +133,9 @@ world, not an established fact about it.
 
 ## Package 5 (preview) — the follow-up paradox
 
-Full analysis in Phase 3, but the headline is already unambiguous from
-`reports/profile.json`.
+The dropout table belongs to Package 5, but it is reproduced here because exploration answered it
+outright: the headline needed no model, only `reports/profile.json`. The full package below draws
+the policy conclusion from it.
 
 **The sales manager is wrong.** Stage-over-stage dropout across all campaigns:
 
@@ -154,8 +155,6 @@ abandon them at their most engaged.
 
 The genuine cliff is at **stage 5** (29.2%), which is where a policy review is warranted — not
 stage 3.
-
----
 
 ---
 
@@ -397,6 +396,26 @@ be fabrication dressed as analysis, so the simulator flags it and refuses to ran
 
 ---
 
+## Package 7 — Campaign comparison
+
+`GET /api/campaigns/compare?a=&b=` puts any two campaigns side by side: the stored columns, the
+derived metrics from `metrics.py`, the data-quality flags, and `delta_b_minus_a` — the difference
+on every metric both campaigns actually have.
+
+The brief asks no analytical question of this package; it is a spec-required surface rather than a
+finding. Two implementation choices are worth recording anyway.
+
+**Deltas are computed server-side.** The dashboard could subtract two numbers itself, but then
+every future client would re-decide which direction counts as "better" and what to do about a
+missing value. One definition, computed once, keeps the API and the UI from drifting apart.
+
+**A metric missing on either side is omitted rather than zeroed.** 29 campaigns have no
+`cumulative_profit` and 4 have no `ltv_months`. Reporting a delta of `0 − 21,792` for a campaign
+whose profit was never recorded would invent a finding out of a null, which is the same mistake
+the loader refuses to make when it keeps those fields NULL instead of zero-filling them.
+
+---
+
 ## Limitations
 
 **The mid-budget effect may not be real.** A discrete 16-value budget grid with a sharp regime
@@ -413,6 +432,15 @@ spend — every ROAS figure in this report depends on it. Full register in
 **Campaign-level only.** No statement here describes an individual customer. Churn, next-best
 action and personal referral likelihood require a customer table linked by `campaign_id`, which
 does not exist.
+
+**The models answer questions they have not seen, and now say so.** No training campaign has
+fewer than 11 leads, and `ad_budget` takes 16 discrete values capped at ₪20,000. Phase 7 found a
+zero-lead campaign being answered with a confident 33.66-month lifetime, because the served LTV
+baseline reads only `ad_budget` and is structurally blind to a funnel that reached nobody — the
+173 campaigns that closed nothing average 4.7 months and upsell at exactly 0.0. Every prediction
+response now carries `in_distribution`, with the offending field and the observed range named when
+it is false. The guard reports extrapolation; it does not remove it. A labelled number outside the
+training support is still a number the data cannot vouch for.
 
 Model provenance — features, checkpoint, seed, git SHA, row counts — is recorded in
 [`docs/MODEL_CARDS.md`](docs/MODEL_CARDS.md) and `models/*.json`.

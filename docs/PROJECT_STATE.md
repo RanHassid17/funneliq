@@ -11,8 +11,12 @@ Last updated: 2026-07-29 · after Phase 6
 
 ## Current milestone
 
-**Phases 0–7 complete** (PRs #1–#10 merged; Phase 7 on `feat/qa`).
-Next: **Phase 8 — docs & polish**.
+**All 8 phases complete** (PRs #1–#10 merged; Phases 7 and 8 on `feat/qa`, awaiting one PR).
+Phase 8 closed the documentation gaps rather than writing new prose: the README's build status was
+stale, its architecture diagram still named `login.html` — the file Phase 7 proved never existed —
+and neither the README nor `REPORT.md` mentioned the `in_distribution` guard that Phase 7 shipped
+into every prediction response. `REPORT.md` also had no Package 7 section for the campaign
+comparison surface. All four are now written down.
 
 **The analyst is live.** The user set `ANTHROPIC_API_KEY` on Railway on 2026-07-29 and `/ready`
 reports `analyst.available: true`. What that proves is that the endpoint is *reachable* — no
@@ -219,18 +223,23 @@ self-serves it. Depending on project settings Supabase may require email confirm
 
 ## Next action
 
-**Phase 7 — QA & traceability.** Walk the `PLAN.md` §12 requirements matrix, reconcile every
-dashboard number against SQL, and run adversarial checks against the deployed service.
+**Merge `feat/qa` into `master`.** It carries Phases 7 and 8. Two of the three Phase 7 defects are
+user-visible on the live service and stay broken until this deploys: the dashboard serves a stale
+cached page, and every analyst question fails with HTTP 400 because Claude Sonnet 5 rejects
+`temperature`. Railway deploys from `master`, so the merge is the fix.
 
-Two things left over from Phase 6, both waiting on a human decision rather than on code:
+**After the deploy, verify rather than assume:**
 
-1. **Set `ANTHROPIC_API_KEY` on Railway** (approval gate: ongoing cost). Until then the deployed
-   analyst answers 503. After setting it, verify with `GET /api/ask/status` → `available: true`
-   and one real question through the dashboard.
-2. **Watch the Railway build.** Phase 6 adds ~220 MB to the image (chromadb, onnxruntime, grpc,
-   kubernetes). Verify `/ready` after the deploy, not `/health` — `/health` touches nothing and
-   would pass over a broken import.
+1. `GET /ready` → `analyst.available: true`, and the models and database each report healthy.
+   Check `/ready`, not `/health` — `/health` touches nothing and would pass over a broken import.
+2. Ask the analyst one real question through the dashboard. This is the half of Phase 6 that has
+   never been exercised: the endpoint is reachable, but no answer has been judged for quality.
+   Phase 7 fixed the call that made the first attempt fail; that fix is unverified in production.
+3. Hard-reload the dashboard once and confirm the `cache-control: no-cache` headers are actually
+   served, since the bug they fix is precisely one that hides a correct deploy.
 
-Then **Phase 7 (QA + traceability)** and **Phase 8 (docs)**.
+**Still open, and not a code task:** whether `cumulative_profit` is gross or net of ad spend
+(`docs/OPEN_QUESTIONS.md` Q6). Every ROAS figure in `REPORT.md` depends on it, which is why the
+budget recommendation was checked for a sign flip under both readings rather than waiting on it.
 
 Owner: Data & ML Engineer.
