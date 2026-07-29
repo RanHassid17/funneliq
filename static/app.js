@@ -83,10 +83,25 @@
     };
   }
 
+  const esc = (text) =>
+    String(text).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
+    );
+
   function provenance(result) {
-    return `<p class="provenance">Model: ${result.model} · checkpoint ${result.checkpoint}${
-      result.note ? "<br>" + result.note : ""
-    }</p>`;
+    // An extrapolation warning goes ABOVE the provenance line and in the loud
+    // style, because it changes whether the number should be believed at all.
+    // Phase 7 found a zero-lead campaign returning a confident 33.66 months;
+    // the number is still shown, but never again bare.
+    const warning = result.in_distribution === false && result.warning
+      ? `<div class="callout warn">${esc(result.warning)}</div>`
+      : "";
+    return (
+      warning +
+      `<p class="provenance">Model: ${esc(result.model)} · checkpoint ${esc(result.checkpoint)}${
+        result.note ? "<br>" + esc(result.note) : ""
+      }</p>`
+    );
   }
 
   async function predictAll() {

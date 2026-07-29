@@ -21,6 +21,7 @@ import json
 from typing import Any
 
 from ..api import db
+from ..api.distribution import annotate
 from ..api.predictors import ModelUnavailable, model_summary
 from ..models import REPORTS_DIR
 
@@ -123,6 +124,10 @@ def run_model(
     except ValueError as exc:
         return _dump({"error": str(exc)})
 
+    # Same extrapolation guard the HTTP route applies. Without this an agent
+    # could reach a prediction the endpoints label as unsupported and then quote
+    # it to a user as a plain number.
+    result = annotate(result, campaign.supplied())
     result["applies_to"] = "the campaign described, not any individual customer"
     return _dump(result)
 

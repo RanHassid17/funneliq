@@ -70,4 +70,9 @@ def build_llm(model: str | None = None):  # type: ignore[no-untyped-def]
 
     from crewai import LLM
 
-    return LLM(model=model or DEFAULT_MODEL, api_key=api_key(), temperature=0.1)
+    # No `temperature`. Claude Sonnet 5 rejects it outright -- "`temperature` is
+    # deprecated for this model", HTTP 400 -- and the first real question ever
+    # asked of this analyst failed on exactly that. Passing a sampling knob the
+    # model does not accept is worse than not tuning: it turns every request into
+    # an error. The model's default is what the agents now run on.
+    return LLM(model=model or DEFAULT_MODEL, api_key=api_key())

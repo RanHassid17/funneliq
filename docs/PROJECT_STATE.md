@@ -11,14 +11,16 @@ Last updated: 2026-07-29 · after Phase 6
 
 ## Current milestone
 
-**Phases 0–6 complete** (PRs #1–#9 merged; Phase 6 on `feat/crew`).
-Next: **Phase 7 — QA & traceability**.
+**Phases 0–7 complete** (PRs #1–#10 merged; Phase 7 on `feat/qa`).
+Next: **Phase 8 — docs & polish**.
 
-**Phase 6 caveat: the analyst is built and its degradation path is verified, but no answer has
-been produced by a real model.** `ANTHROPIC_API_KEY` is unset locally and on Railway, and setting
-it creates ongoing cost — a human approval gate. Until someone sets it, `/api/ask` returns 503,
-the dashboard hides the panel, and everything else works. Do not describe the analyst as
-"working" anywhere; describe it as built and unexercised.
+**The analyst is live.** The user set `ANTHROPIC_API_KEY` on Railway on 2026-07-29 and `/ready`
+reports `analyst.available: true`. What that proves is that the endpoint is *reachable* — no
+answer has yet been judged for quality, so do not describe the analyst as "verified", only as
+live and unexercised.
+
+**Phase 7 found a live defect and fixed it.** A zero-lead campaign was returning a confident
+33.66-month LTV with nothing marking it unsupported. See `PLAN.md` §12 "Phase 7 findings".
 
 **The brief's definition of done is met.** A stranger can open the live URL, sign in,
 get campaign predictions, and read the funnel and budget insights unaided. Confirmed
@@ -147,7 +149,11 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | **Crew constructs against the real API** | 8 build roles + Analyst + Reviewer + 4 tools + Crew all instantiate |
 | **Analyst is not part of readiness** | `/ready` verdict is identical with and without the key |
 | **Agent tools take no SQL** | `query_campaigns` signature is `{campaign_id, limit}`; row cap enforced at 50 |
-| NOT verified: a real analyst answer | needs `ANTHROPIC_API_KEY`; no LLM call has been made |
+| **Analyst live on Railway** | key set by the user 2026-07-29; `/ready` reports `analyst.available: true` |
+| NOT verified: analyst answer quality | the endpoint is reachable, but no question has been judged for correctness |
+| **Phase 7: zero-lead defect found and fixed** | was 33.66 months bare; now `in_distribution: false` + named ranges |
+| **Dashboard reconciled against SQL** | follow-up dropout matches Supabase to 4 dp at every stage |
+| **Adversarial pass** | missing env vars, 7 malformed payloads, nulls, infinities — all handled |
 
 ## Artifacts
 
