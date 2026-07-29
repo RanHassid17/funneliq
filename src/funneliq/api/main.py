@@ -135,15 +135,41 @@ def ready() -> dict[str, Any]:
     }
 
 
+class NoStaleAssets(StaticFiles):
+    """Serve the dashboard's JS and CSS with revalidation forced.
+
+    Phase 6 shipped an "Ask the analyst" panel that the browser did not show,
+    because Starlette's StaticFiles sends `last-modified` and an `etag` but no
+    `cache-control`. Browsers then apply a heuristic: they guess a freshness
+    lifetime from the last-modified date and reuse the file without asking. The
+    deploy was correct, the API was correct, and the user still saw the old page.
+
+    `no-cache` does not mean "never cache". It means "cache it, but revalidate
+    before use" -- so an unchanged file still costs a 304 and no body, while a
+    changed one is picked up on the next load rather than whenever the browser
+    decides. That is the right trade for three small files that change every
+    time the dashboard does.
+    """
+
+    def is_not_modified(self, response_headers, request_headers) -> bool:  # type: ignore[no-untyped-def]
+        response_headers.setdefault("cache-control", "no-cache")
+        return super().is_not_modified(response_headers, request_headers)
+
+    async def get_response(self, path: str, scope):  # type: ignore[no-untyped-def]
+        response = await super().get_response(path, scope)
+        response.headers.setdefault("cache-control", "no-cache")
+        return response
+
+
 # Mounted last: FastAPI matches routes in order, so the API and probes above win
 # and only unmatched paths fall through to the dashboard files.
 if STATIC_DIR.is_dir():
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.mount("/static", NoStaleAssets(directory=STATIC_DIR), name="static")
 
     @app.get("/", include_in_schema=False)
     def login_page() -> FileResponse:
         """The login screen. An unauthenticated visitor sees only this."""
-        return FileResponse(STATIC_DIR / "index.html")
+        return FileResponse(STATIC_DIR / "index.html", headers={"cache-control": "no-cache"})
 
     @app.get("/dashboard.html", include_in_schema=False)
     def dashboard_page() -> FileResponse:
@@ -153,4 +179,4 @@ if STATIC_DIR.is_dir():
         requires a verified session, and app.js redirects to the login screen
         before rendering if there is no session.
         """
-        return FileResponse(STATIC_DIR / "dashboard.html")
+        return FileResponse(STATIC_DIR / "dashboard.html", headers={"cache-control": "no-cache"})

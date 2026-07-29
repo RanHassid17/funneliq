@@ -359,3 +359,30 @@ def test_offline_run_refuses_cleanly_without_a_key(monkeypatch: pytest.MonkeyPat
     from funneliq.crew.run import main
 
     assert main(["--stage", "analysis"]) == 1
+
+
+def test_the_llm_is_built_without_a_temperature(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Claude Sonnet 5 rejects `temperature` with a 400.
+
+    The first real question ever asked of this analyst failed on exactly that:
+    "`temperature` is deprecated for this model". Passing a sampling knob the
+    model does not accept is worse than not tuning it, because it turns every
+    request into an error rather than a differently-worded answer.
+    """
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-not-a-real-key")
+    captured: dict[str, object] = {}
+
+    class FakeLLM:
+        def __init__(self, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+    import crewai
+
+    monkeypatch.setattr(crewai, "LLM", FakeLLM)
+
+    from funneliq.crew import build_llm
+
+    build_llm()
+
+    assert "temperature" not in captured
+    assert captured["model"].startswith("anthropic/")  # type: ignore[union-attr]

@@ -39,6 +39,17 @@ class CampaignInput(BaseModel):
             raise ValueError("followup_2 cannot exceed followup_1")
         return self
 
+    def supplied(self) -> dict[str, float]:
+        """Only the fields the caller actually sent.
+
+        The distribution guard checks these and not the defaults. Every funnel
+        count defaults to zero, and zero is outside the observed range for all of
+        them -- so checking defaults would report extrapolation on
+        `{"ad_budget": 3000}`, an ordinary pre-launch request that reads no
+        funnel field at all.
+        """
+        return {name: getattr(self, name) for name in self.model_fields_set}
+
     def to_features(self) -> dict[str, float]:
         """Raw fields for the feature builder.
 

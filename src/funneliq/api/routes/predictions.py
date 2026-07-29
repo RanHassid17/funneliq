@@ -17,6 +17,7 @@ from ...data.frames import load_campaign_frame
 from ...models import REPORTS_DIR
 from ...models.budget import recommend, simulate
 from ..auth import User, current_user
+from ..distribution import annotate
 from ..predictors import (
     ModelUnavailable,
     model_summary,
@@ -35,14 +36,23 @@ def _model_missing(exc: ModelUnavailable) -> HTTPException:
 
 
 def _predict(fn: Any, campaign: CampaignInput) -> dict[str, Any]:
+    """Predict, then say whether the campaign is one the models have seen.
+
+    The annotation is not optional decoration. Phase 7 found that a zero-lead
+    campaign came back with a confident 33.66-month lifetime, because the served
+    LTV baseline reads only `ad_budget` and cannot notice that the funnel reached
+    nobody. The number still comes back -- a campaign that spent its budget and
+    got no leads is a real thing -- but it comes back labelled.
+    """
     try:
-        return fn(campaign.to_features())
+        result = fn(campaign.to_features())
     except ModelUnavailable as exc:
         raise _model_missing(exc) from exc
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
         ) from exc
+    return annotate(result, campaign.supplied())
 
 
 @router.post("/predict/ltv")
@@ -125,12 +135,22 @@ def funnel_dropout(_: User = Depends(current_user)) -> dict[str, Any]:
             detail="Funnel profile unavailable. Run: python -m funneliq.data.profile",
         )
 
-    stages = json.loads(profile_path.read_text())["followup_dropout"]
+    profile = json.loads(profile_path.read_text())
+    stages = profile["followup_dropout"]
     worst = max(stages, key=lambda s: s["dropout_from_previous"])
     best = min(stages, key=lambda s: s["dropout_from_previous"])
 
     return {
         "stages": stages,
+        # Two row counts legitimately coexist in this product and saying which
+        # one produced these percentages stops that looking like an error. This
+        # profile describes the raw CSV; the database holds 10 fewer rows after
+        # exact duplicates were dropped at load. Phase 7 reconciled the two: the
+        # dropout rates agree to four decimal places, so the difference changes
+        # no conclusion -- but a reader comparing this against `/ready` deserves
+        # to be told rather than left to wonder.
+        "computed_on_rows": profile["rows"],
+        "source": "reports/profile.json (raw CSV, before de-duplication)",
         "largest_dropout_stage": worst["stage"],
         "most_retentive_stage": best["stage"],
         "recommendation": (

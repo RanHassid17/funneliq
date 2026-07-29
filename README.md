@@ -12,9 +12,11 @@ long-lived customers, where leads fall out of the follow-up sequence, and how to
 
 Open the live URL, create an account, and the dashboard answers all six work packages.
 
-> **Build status: Phase 6 of 8 complete.** Data, models, auth, the dashboard and the CrewAI
-> analyst are live. QA/traceability (Phase 7) and final polish (Phase 8) remain.
-> [`PLAN.md`](PLAN.md) is the full roadmap and the record of every decision behind it.
+> **Build status: all 8 phases complete.** Data, models, auth, the dashboard and the CrewAI
+> analyst are live. Phase 7 walked the requirements matrix end to end and fixed the three defects
+> it found; Phase 8 is the documentation pass.
+> [`PLAN.md`](PLAN.md) is the full roadmap and the record of every decision behind it — §12 holds
+> the traceability matrix and the Phase 7 findings.
 >
 > Railway deploys from GitHub `master`, so every merge redeploys automatically. The service runs
 > on a free trial plan and may cold-start after a period of inactivity — the first request can
@@ -39,7 +41,7 @@ product refuses to do it.
 ## Architecture
 
 ```
-Browser (login.html, dashboard.html)
+Browser (index.html = login, dashboard.html)
   └─ supabase-js ── ANON KEY ONLY ──────────► Supabase Auth
   └─ fetch(Bearer JWT) ─────────────────────► FastAPI on Railway
                                                 ├─ verifies the Supabase JWT server-side
@@ -159,6 +161,16 @@ database is unreachable" and "the models were never trained" need different fixe
 
 **The LTV and profit endpoints serve the budget baseline, not the ensembles** — the honest
 consequence of boosting failing to beat it. Each response names the model that answered it.
+
+**Every prediction says whether it is extrapolation.** Each response carries `in_distribution`,
+and when it is `false` an `out_of_range` list names the offending field beside the range actually
+observed in training. Phase 7 found a zero-lead campaign coming back with a confident 33.66-month
+lifetime, because the budget baseline reads only `ad_budget` and cannot notice a funnel that
+reached nobody. The number is still returned — a campaign that spent its budget and got no leads
+is a real thing — but it is returned labelled. Only fields the caller actually sent are checked,
+so an ordinary pre-launch `{"ad_budget": 3000}` is not flagged for funnel counts it never
+supplied. The analyst's `run_model` tool carries the same annotation, so an agent cannot quote a
+figure the API marked unsupported.
 
 ## Models
 

@@ -205,7 +205,7 @@ the brief's `.gitignore` rule targets; the README says so explicitly.
 ## 4. Architecture
 
 ```
-Browser (login.html, dashboard.html)
+Browser (index.html = login, dashboard.html)
   └─ supabase-js ── ANON KEY ONLY ──────────► Supabase Auth
   └─ fetch(Bearer JWT) ─────────────────────► FastAPI on Railway
                                                 ├─ verifies Supabase JWT server-side
@@ -220,22 +220,40 @@ actually grades. It falls out of this shape rather than being bolted on.
 
 ## 5. Repository layout
 
+Updated in Phase 8 to what actually shipped. The version here through Phase 7 was the layout as
+first planned, and it had drifted: it named `login.html` and `charts.js`, which never existed, and
+split the models into one module per target when they were built as a shared pipeline. A layout
+diagram that disagrees with the tree is worse than none — it is how `login.html` reached the §12
+matrix and the README in the first place.
+
 ```
 funneliq/
   src/funneliq/
-    data/      profile.py  invariants.py  metrics.py  load_to_supabase.py  features.py
-    models/    ltv.py  upsell.py  referral.py  profit.py  budget.py  registry.py
-    api/       main.py  auth.py  db.py  routes/{predict,campaigns,funnel,budget,ask}.py
-    crew/      agents.py  tasks.py  tools.py  crews.py  state.py
-  static/      login.html  dashboard.html  app.js  charts.js  styles.css
+    data/      profile.py  invariants.py  metrics.py  features.py  frames.py  load_to_supabase.py
+    models/    train.py  estimators.py  baseline.py  evaluate.py  budget.py  tuning.py  registry.py
+    api/       main.py  auth.py  db.py  config.py  schemas.py  predictors.py  distribution.py
+               routes/{campaigns,predictions,ask}.py
+    crew/      agents.py  analyst.py  tools.py  guardrails.py  run.py
+  static/      index.html (login)  dashboard.html  app.js  styles.css
   sql/         schema.sql  rls_policies.sql
-  tests/       test_invariants.py  test_features.py  test_metrics.py  test_api.py  test_auth.py
+  tests/       test_{invariants,features,metrics,models,auth,auth_asymmetric,health,crew,
+               distribution}.py  helpers.py
   data/        funnel_marketing_data.csv
-  reports/     profile.json  invariants.json  *_cv.json  *.png     # generated evidence, committed
-  docs/        DATA_DICTIONARY.md  GLOSSARY.md  OPEN_QUESTIONS.md  model_cards/*.md
+  reports/     profile.json  invariants.json  models.json  budget_simulation.json
+               tuning_ltv.json                            # generated evidence, committed
+  docs/        DATA_DICTIONARY.md  GLOSSARY.md  OPEN_QUESTIONS.md  MODEL_CARDS.md
+               PROJECT_STATE.md
+  models/      *.pkl + a provenance card per model
   .github/workflows/ci.yml
   README.md  REPORT.md  PLAN.md  requirements.txt  .env.example  .gitignore  Procfile
 ```
+
+Three departures from the plan, each with a reason: model cards are one `MODEL_CARDS.md` rather
+than `model_cards/*.md`, because four models did not justify four files; the funnel and budget
+routes sit in `predictions.py` rather than in modules of their own, since both are served by the
+same model artifacts the prediction routes load; and no `*.png` was generated, because the
+dashboard renders its charts client-side from the API,
+so a committed image would be a second version of the same numbers waiting to go stale.
 
 ## 6. Data contract
 
@@ -464,6 +482,30 @@ scope note, credits for borrowed snippets), `REPORT.md` (every brief question fr
 every figure traceable to `reports/`), `.env.example`, final secret-placement pass.
 Optional: 3–5 minute demo recording.
 
+**Done.** Carried on `feat/qa` alongside Phase 7 rather than a separate `feat/docs` branch, so the
+QA fixes and the documentation of those fixes ship in one PR instead of the second describing
+behaviour the first had not yet merged.
+
+Most of both documents already existed; Phase 8 was a gap-closing pass, and the gaps were the kind
+that only appear when documentation is checked against a moving codebase:
+
+- The README advertised **"Phase 6 of 8 complete"** while Phases 7 and 8 were committed.
+- Its architecture diagram named **`login.html`**. That is the same non-existent file the §12
+  matrix cited and Phase 7 corrected — fixing the matrix row had left the second instance behind,
+  which is the ordinary way a documentation error survives being found.
+- Neither document mentioned **`in_distribution`**, though Phase 7 had shipped it into every
+  prediction response and into the analyst's `run_model` tool. A guard nobody is told about is a
+  guard the caller cannot act on.
+- `REPORT.md` had **no Package 7 section**. WP7 asks no analytical question, so no answer was
+  missing, but a spec-required surface was shipped and unwritten.
+- Its source list omitted **`reports/tuning_ltv.json`**, which the Package 2 verdict quotes for
+  114 configurations — a direct contradiction of the document's own opening claim that every
+  figure is traceable to a committed file.
+
+The secret-placement pass is clean: no JWT- or `sk-ant`-shaped string is committed, `.env` is
+untracked, `static/` references the service-role key only in comments explaining that it is absent,
+and CI enforces all three on every push.
+
 ---
 
 ## 10. Agent system
@@ -497,7 +539,10 @@ screenshot.
 
 ## 12. Requirements traceability matrix
 
-Filled in during Phase 7 with the artifact that proves each row.
+**Walked end to end in Phase 7.** Every row below was checked against a real artifact, not
+recalled. Two rows were wrong when checked and are corrected here: `static/login.html` never
+existed (the login screen is `static/index.html`), and the auth row cited a manual check that is
+now automated. The pass also found one behavioural defect — see "Phase 7 findings" below.
 
 | Source | Requirement | Phase | Artifact |
 |---|---|---|---|
@@ -510,7 +555,7 @@ Filled in during Phase 7 with the artifact that proves each row.
 | Brief · Supabase | Repeatable CSV load script | 1 | `load_to_supabase.py` |
 | Brief · Supabase | App reads Supabase **at runtime** | 4 | `/api/campaigns` |
 | Brief · Supabase | Credentials from env vars | 0–4 | `.env.example` |
-| Brief · Auth | Email+password login screen | 5 | `static/login.html` |
+| Brief · Auth | Email+password login screen | 5 | `static/index.html` (**not** `login.html` — matrix was wrong) |
 | Brief · Auth | Session: gated / reachable / sign-out clears | 5 | `test_auth.py` + manual check |
 | Brief · Auth | Anon key in browser, service key server-only | 4, 5 | CI grep over `static/` |
 | Brief · Auth | RLS policies enforce authenticated read | 1 | `sql/rls_policies.sql` |
@@ -534,6 +579,40 @@ Filled in during Phase 7 with the artifact that proves each row.
 | Spec §16.5 | Human approval gates honoured | 1, 4 | approval notes in state file |
 | Spec §17.5 | Data dictionary, model cards, limitations | 1, 3, 8 | `docs/` |
 | Spec §17.6 | Customer-level scope explicitly excluded | 8 | `README.md` |
+| Spec §16.9 | Agents cannot drift to customer-level | 6 | `crew/guardrails.py` + `test_crew.py` |
+| Phase 7 | Out-of-distribution inputs labelled | 7 | `api/distribution.py` + `test_distribution.py` |
+| Phase 8 | Extrapolation guard documented for callers | 8 | `README.md` API section + `REPORT.md` limitations |
+| Phase 8 | Campaign comparison written up | 8 | `REPORT.md` Package 7 |
+
+### Phase 7 findings
+
+**1. A zero-lead campaign was answered bare, and confidently.** `POST /api/predict/ltv` with
+`num_leads=0` returned **33.66 months**; `/api/predict/upsell` returned **35.6%**. Neither
+carried any signal that the input was unsupported. The training data contains **no campaign with
+fewer than 11 leads**, and the 173 campaigns that closed nothing average **4.7 months** with an
+upsell rate of exactly **0.0**. The 33.66 arises because the served LTV baseline reads only
+`ad_budget` and is structurally blind to a funnel that reached nobody.
+
+This was a live defect in a shipped product, not a hypothetical. The project had already written
+the correct principle down twice — in `schemas.py` ("more useful than returning a confident number
+derived from impossible input") and in `budget.py` ("presenting that as a forecast would be
+fabrication") — and applied it only to the budget simulator. `api/distribution.py` generalises the
+existing `in_distribution` mechanism to every prediction input. The number is still returned,
+because a campaign that spent its budget and reached no one is a real thing; it is now returned
+labelled, with the offending field and the observed range named. The crew's `run_model` tool
+carries the same annotation, so an agent cannot quote a figure the API marks unsupported.
+
+**2. Two row counts coexist.** `reports/profile.json` describes the raw CSV (**3,500** rows);
+the database holds **3,490** after 10 exact duplicates were dropped at load. Reconciled directly
+against Supabase: follow-up dropout agrees to **four decimal places** at every stage, so no
+conclusion changes. `/api/funnel/dropout` now states which population it was computed on rather
+than leaving a reader to reconcile it against `/ready`.
+
+**3. Adversarial checks passed.** Missing env vars → `/health` 200, `/ready` 200 reporting
+`configured: false`, `/api/config` 503, data routes 401 — no stack traces. Malformed inputs
+(zero/negative/absurd budget, `answered > leads`, `followup_2 > followup_1`, missing budget) all
+→ 422. Nulls in `ltv_months` (4) and `cumulative_profit` (29) survive the pipeline as nulls; no
+derived column contains an infinity.
 
 ## 13. Risks
 
