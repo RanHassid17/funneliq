@@ -98,6 +98,25 @@
       <div id="models-body"><p class="state">Loading…</p></div>
     </section>
 
+    <!-- Hidden until /api/ask/status confirms the analyst is configured. An
+         input box that can only ever return an error is worse than no box. -->
+    <section class="panel wide" id="ask-panel" hidden>
+      <h2>Ask the analyst</h2>
+      <p class="hint">
+        An AI analyst with access to the campaign data and the four models. It answers about
+        campaigns, not individual customers, and a reviewer agent checks every figure it quotes.
+      </p>
+      <div class="grid">
+        <div style="flex:1 1 100%">
+          <label for="question">Question</label>
+          <input id="question" type="text" maxlength="500"
+                 placeholder="Which budget tier gives the best return?">
+        </div>
+        <div style="display:flex;align-items:flex-end"><button id="ask" type="button">Ask</button></div>
+      </div>
+      <div id="ask-body"><p class="state">Ask a question about the campaign data.</p></div>
+    </section>
+
   </div>
 </main>
 

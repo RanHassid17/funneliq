@@ -306,8 +306,68 @@
     }
   }
 
+  // --- Ask the analyst ------------------------------------------------------
+
+  async function loadAskPanel() {
+    try {
+      const status = await api("/api/ask/status");
+      if (!status.available) return; // stays hidden; the reason is in /ready
+      $("ask-panel").hidden = false;
+      setState("ask-body", `Ask a question. Up to ${status.questions_per_hour} per hour — each one calls a paid model.`);
+    } catch {
+      // The analyst is optional. A dashboard that renders every other panel is
+      // the right outcome when it is unreachable.
+    }
+  }
+
+  async function ask() {
+    const question = $("question").value.trim();
+    if (!question) return;
+    setState("ask-body", "Thinking… the analyst calls tools and a reviewer checks the draft, so this takes a few seconds.");
+    $("ask").disabled = true;
+    try {
+      const data = await api("/api/ask", {
+        method: "POST",
+        body: JSON.stringify({ question }),
+      });
+      // The answer is model-generated text derived from campaign data, so it is
+      // rendered as TEXT, never as markup. Building it into innerHTML would make
+      // the analyst an injection path into the page.
+      const body = $("ask-body");
+      body.innerHTML = "";
+      const answer = document.createElement("p");
+      answer.className = "answer";
+      answer.textContent = data.answer;
+      body.appendChild(answer);
+
+      if (data.campaign_language_warnings?.length) {
+        const warning = document.createElement("div");
+        warning.className = "callout warn";
+        warning.textContent =
+          "This answer used customer-level phrasing (" +
+          data.campaign_language_warnings.join(", ") +
+          "). FunnelIQ predicts campaign outcomes, not individual customers'.";
+        body.appendChild(warning);
+      }
+
+      const note = document.createElement("p");
+      note.className = "hint";
+      note.textContent = data.note;
+      body.appendChild(note);
+    } catch (error) {
+      setState("ask-body", error.message, "error");
+    } finally {
+      $("ask").disabled = false;
+    }
+  }
+
+  $("ask").addEventListener("click", ask);
+  $("question").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") ask();
+  });
+
   // --- Boot -----------------------------------------------------------------
 
-  await Promise.all([loadFunnel(), simulate(), loadCampaignOptions(), loadModels()]);
+  await Promise.all([loadFunnel(), simulate(), loadCampaignOptions(), loadModels(), loadAskPanel()]);
   await predictAll();
 })();

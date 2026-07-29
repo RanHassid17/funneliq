@@ -10,7 +10,8 @@ uvicorn[standard]==0.51.0
 # from Phase 4, so they belong in the runtime set rather than dev-only.
 pandas==3.0.5
 supabase==2.31.0
-python-dotenv==1.2.2
+# Held at 1.1.x by crewai 1.9.3, which requires python-dotenv~=1.1.1.
+python-dotenv==1.1.1
 
 # Modelling (Phase 3). Loaded by the API from Phase 4 to serve predictions.
 scikit-learn==1.9.0
@@ -19,3 +20,18 @@ lightgbm==4.7.0
 catboost==1.2.10
 joblib==1.5.3
 pyjwt==2.13.0
+
+# Agents (Phase 6). 1.9.3 is the newest INSTALLABLE release, not the newest
+# published one: crewai 1.10 through 1.15 require `lancedb>=0.29.2`, and the
+# newest lancedb on PyPI is 0.25.3, so every one of those versions fails to
+# resolve. This is not a Python-version problem — 1.15.8 declares support for
+# 3.10–3.13 and fails identically on 3.12, which retires the compatibility risk
+# PLAN.md §13 flagged.
+#
+# It is a heavy dependency: chromadb, onnxruntime, grpc and kubernetes add
+# roughly 220 MB to the image for features FunnelIQ does not use. That is the
+# price of the framework, and the reason `funneliq.crew` imports it lazily — if
+# any of it fails to load on Railway, /api/ask returns 503 and the rest of the
+# service keeps serving.
+crewai[anthropic]==1.9.3
+

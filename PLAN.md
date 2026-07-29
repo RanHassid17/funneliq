@@ -440,6 +440,18 @@ cannot drift into customer-level phrasing.
 **Validation:** the offline crew reproduces a `REPORT.md` section from committed reports; the
 runtime endpoint answers a known question and refuses cleanly without a key.
 
+**Status: built, partially validated.** 24 tests cover the tools, guardrails, rate limiter and
+the degradation path, and the whole crew instantiates against the real CrewAI API. The half that
+is *not* validated is the half that costs money: no LLM call has been made, because
+`ANTHROPIC_API_KEY` is unset and setting it is an ongoing-cost approval gate. So "refuses cleanly
+without a key" is verified; "answers a known question" is not, and `docs/PROJECT_STATE.md` says
+so rather than letting a passing test suite imply otherwise.
+
+Two design choices worth recording. The Reviewer agent has **no tools**, so it judges whether the
+analyst's answer was supported rather than going and finding a better one. And the tools take
+**structured parameters, never SQL** — the crew holds the service-role key, which bypasses RLS,
+so a tool that accepted a query would make prompt injection a direct database exploit.
+
 ### Phase 7 — QA & traceability
 `feat/qa` · Independent pass: §12 matrix walked end to end, dashboard numbers reconciled against
 direct SQL, adversarial checks (missing env vars, malformed CSV, invalid session, zero-lead
@@ -533,7 +545,8 @@ Filled in during Phase 7 with the artifact that proves each row.
 | Q6 (gross vs net profit) stays unresolved | WP6 reports both ROAS and net return; the recommendation is checked for sign-flip under either reading |
 | The 155 closed-but-unpaid campaigns distort training | Flagged in `data_quality_flags`, kept not dropped, and reported as their own segment |
 | Model `.pkl` artifacts bloat the repo | Small for this dataset; commit them; revisit if size grows |
-| CrewAI compatibility with Python 3.13 | Verify at the start of Phase 6; pin 3.11/3.12 in the Railway runtime if needed |
+| ~~CrewAI compatibility with Python 3.13~~ | **Retired.** `crewai==1.9.3` installs and runs on 3.13.0; no runtime pin needed. The real constraint turned out to be a broken pin: 1.10–1.15 require `lancedb>=0.29.2`, which does not exist on PyPI, and fail identically on 3.12 |
+| CrewAI's dependency weight | chromadb, onnxruntime, grpc and kubernetes add ~220 MB. Mitigated by importing `crewai` lazily so a load failure costs `/api/ask` and nothing else |
 | Runtime LLM cost | Only `/api/ask` spends; bounded by rate limiting and an iteration cap |
 | Railway free-tier sleep | Health endpoint plus documented cold-start behaviour in the README |
 | Stitch MCP is experimental | Pin the version, run `doctor`, keep a hand-written HTML/CSS fallback |

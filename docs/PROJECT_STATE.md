@@ -5,13 +5,20 @@ able to read this file plus `PLAN.md` and resume without redoing discovery.
 
 **Never put secrets in this file.** Keys live in `.env` (gitignored) and in Railway variables.
 
-Last updated: 2026-07-28 · after Phase 5
+Last updated: 2026-07-29 · after Phase 6
 
 ---
 
 ## Current milestone
 
-**Phases 0–5 complete** (PRs #1–#9 merged). Next: **Phase 6 — CrewAI analyst**.
+**Phases 0–6 complete** (PRs #1–#9 merged; Phase 6 on `feat/crew`).
+Next: **Phase 7 — QA & traceability**.
+
+**Phase 6 caveat: the analyst is built and its degradation path is verified, but no answer has
+been produced by a real model.** `ANTHROPIC_API_KEY` is unset locally and on Railway, and setting
+it creates ongoing cost — a human approval gate. Until someone sets it, `/api/ask` returns 503,
+the dashboard hides the panel, and everything else works. Do not describe the analyst as
+"working" anywhere; describe it as built and unexercised.
 
 **The brief's definition of done is met.** A stranger can open the live URL, sign in,
 get campaign predictions, and read the funnel and budget insights unaided. Confirmed
@@ -114,7 +121,7 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | What | Evidence |
 |---|---|
 | CI green | `secret-scan` ✓, `test` ✓ on every push |
-| Local toolchain | ruff clean, ruff format clean, **117 tests pass** |
+| Local toolchain | ruff clean, ruff format clean, **141 tests pass** |
 | Live health | `HTTP 200`, `commit: 40924787…` matching `master` HEAD |
 | Push triggers redeploy | `4092478` deployed with `reason: deploy` |
 | Survives restart | forced redeploy reset uptime 206.3s → 19.7s, recovered unattended |
@@ -135,6 +142,12 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 | Leakage cost measured | LTV R² 0.853 → 0.946 with forbidden columns |
 | Leakage policy enforced | `test_features.py` asserts CAC and `purchased` cannot reach any pre-outcome model |
 | No infinities in derived metrics | `test_metrics.py` checks all 24 derived columns on all 3,500 rows |
+| **CrewAI works on Python 3.13** | `crewai==1.9.3` installs and imports on 3.13.0; the §13 risk is retired |
+| **Analyst degrades, not crashes** | without a key: `/api/ask` → 503, `/health` `/api/models` `/api/predict/*` → 200 |
+| **Crew constructs against the real API** | 8 build roles + Analyst + Reviewer + 4 tools + Crew all instantiate |
+| **Analyst is not part of readiness** | `/ready` verdict is identical with and without the key |
+| **Agent tools take no SQL** | `query_campaigns` signature is `{campaign_id, limit}`; row cap enforced at 50 |
+| NOT verified: a real analyst answer | needs `ANTHROPIC_API_KEY`; no LLM call has been made |
 
 ## Artifacts
 
@@ -146,7 +159,9 @@ Reproduced by committed code into `reports/profile.json` and `reports/invariants
 `docs/{DATA_DICTIONARY,GLOSSARY,OPEN_QUESTIONS,PROJECT_STATE}.md` ·
 `src/funneliq/models/{__init__,evaluate,registry,estimators,train,budget,tuning}.py` · `tests/test_models.py` ·
 `models/*.{pkl,json}` · `reports/{profile,invariants,models,budget_simulation,tuning_ltv}.json` ·
-`docs/MODEL_CARDS.md` · `data/funnel_marketing_data.csv` · `REPORT.md`
+`docs/MODEL_CARDS.md` · `data/funnel_marketing_data.csv` · `REPORT.md` ·
+`src/funneliq/crew/{__init__,guardrails,tools,agents,analyst,run}.py` ·
+`src/funneliq/api/routes/ask.py` · `tests/test_crew.py` · `static/{dashboard.html,app.js,styles.css}`
 
 ## Open blockers
 
@@ -179,6 +194,14 @@ fail with an opaque `Library not loaded: @rpath/libomp.dylib`.
 
 **CatBoost writes a `catboost_info/` log directory** on every fit. It is gitignored.
 
+**`crewai` is pinned to 1.9.3 because 1.10–1.15 are uninstallable, not because of Python.**
+They require `lancedb>=0.29.2`; the newest lancedb on PyPI is 0.25.3, so the resolver fails on
+3.12 and 3.13 alike. Do not "fix" this by changing the Python version.
+
+**Nothing in `funneliq/crew/` may import `crewai` at module scope.** The API imports the package
+on startup; a top-level import would put chromadb/onnxruntime/grpc in the service's critical path
+and turn one broken native library into a dead deployment.
+
 macOS/iCloud produced a set of `"<name> 2.py"` duplicate files that were committed once and broke
 the test run — pytest collected stale copies alongside the real modules. They are now removed and
 `.gitignore`d. If tests suddenly fail on names that look already-fixed, check for them again.
@@ -190,17 +213,17 @@ self-serves it. Depending on project settings Supabase may require email confirm
 
 ## Next action
 
-**Phase 6 — CrewAI analyst**, on branch `feat/crew`. Per `PLAN.md` §9:
+**Phase 7 — QA & traceability.** Walk the `PLAN.md` §12 requirements matrix, reconcile every
+dashboard number against SQL, and run adversarial checks against the deployed service.
 
-1. Offline crew: `python -m funneliq.crew.run --stage analysis` drafting REPORT sections from
-   `reports/*.json`. No runtime cost.
-2. Runtime: `POST /api/ask`, auth-gated, answering campaign questions from the dashboard.
-   Must return **503 with a clear message** when `ANTHROPIC_API_KEY` is unset, never crash.
-3. Agent prompts must carry the campaign-level rule so an agent cannot drift into
-   customer-level phrasing.
+Two things left over from Phase 6, both waiting on a human decision rather than on code:
 
-**Verify CrewAI works on Python 3.13 first** — `PLAN.md` §13 flags this; pin 3.11/3.12 in the
-Railway runtime if not.
+1. **Set `ANTHROPIC_API_KEY` on Railway** (approval gate: ongoing cost). Until then the deployed
+   analyst answers 503. After setting it, verify with `GET /api/ask/status` → `available: true`
+   and one real question through the dashboard.
+2. **Watch the Railway build.** Phase 6 adds ~220 MB to the image (chromadb, onnxruntime, grpc,
+   kubernetes). Verify `/ready` after the deploy, not `/health` — `/health` touches nothing and
+   would pass over a broken import.
 
 Then **Phase 7 (QA + traceability)** and **Phase 8 (docs)**.
 

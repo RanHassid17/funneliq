@@ -203,6 +203,17 @@ td.excluded { color: var(--muted); }
     color: var(--muted);
 }
 
+.callout.warn { border-left-color: var(--bad); }
+
+/* Analyst answers arrive as prose with real line breaks. `pre-wrap` keeps them
+   without ever interpreting the model's output as markup. */
+.answer {
+    white-space: pre-wrap;
+    line-height: 1.55;
+    font-size: 14px;
+    padding: 14px 0 2px;
+}
+
 footer { color: var(--muted); font-size: 12px; text-align: center; padding: 26px 22px 40px; }
 
 @media (max-width: 560px) {

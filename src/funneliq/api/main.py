@@ -23,10 +23,11 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from ..crew import unavailable_reason as analyst_unavailable_reason
 from .config import ConfigError, get_settings, settings_available
 from .db import SupabaseError, count_campaigns
 from .predictors import ModelUnavailable, model_summary
-from .routes import campaigns, predictions
+from .routes import ask, campaigns, predictions
 
 # Recorded at import so /health can report process uptime. A restart resets it,
 # which is the evidence that verifies restart-survival on the deployed service.
@@ -47,6 +48,7 @@ app = FastAPI(
 
 app.include_router(campaigns.router)
 app.include_router(predictions.router)
+app.include_router(ask.router)
 
 
 @app.get("/api/config", tags=["ops"])
@@ -119,11 +121,17 @@ def ready() -> dict[str, Any]:
     except ModelUnavailable as exc:  # pragma: no cover - defensive
         models = {"loaded": False, "error": str(exc)[:200]}
 
+    # Reported but deliberately NOT part of `ready`. The analyst is optional: a
+    # deployment without an LLM key serves every prediction, chart and campaign
+    # comparison, and marking it unready would take a working service offline.
+    analyst_blocked = analyst_unavailable_reason()
+
     return {
         "ready": configured and database["reachable"] and models["loaded"],
         "configured": configured,
         "database": database,
         "models": models,
+        "analyst": {"available": analyst_blocked is None, "reason": analyst_blocked},
     }
 
 
